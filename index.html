@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -255,9 +256,34 @@
       <div class="grid-item desktop">
         <div class="desktop-app">
           <h3 id="desktop-title">Desktop App</h3>
-          <div class="subtitle" id="desktop-subtitle">Coming Soon</div>
-          <p id="desktop-desc">Offline processing for faster and more secure workflow</p>
-          <div class="badge" id="desktop-badge">Stay tuned</div>
+          <div class="subtitle" id="desktop-subtitle">Unlimited Processing</div>
+          <p id="desktop-desc">Process unlimited photos offline with local processing</p>
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.Setup.exe" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Windows (.exe)
+            </a>
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.dmg" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              macOS (.dmg)
+            </a>
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/geostamp_1.0.0_amd64.deb" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Linux (.deb)
+            </a>
+          </div>
         </div>
       </div>
 
@@ -670,7 +696,16 @@
     }
 
     function handleFileSelect(e) { 
-      selectedFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
+      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
+      if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
+        showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
+        return;
+      }
+      if (!isSubscriber) {
+        selectedFiles = files.slice(0, MAX_FREE_IMAGES);
+      } else {
+        selectedFiles = files;
+      }
       updatePreview(); 
     }
 
@@ -679,7 +714,15 @@
       e.currentTarget.classList.remove('active'); 
       const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); 
       if (files.length > 0) { 
-        selectedFiles = [...selectedFiles, ...files]; 
+        if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
+          showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
+          return;
+        }
+        if (!isSubscriber) {
+          selectedFiles = files.slice(0, MAX_FREE_IMAGES);
+        } else {
+          selectedFiles = [...selectedFiles, ...files];
+        }
         updatePreview(); 
       } 
     }
@@ -1262,4 +1305,1292 @@
     });
   </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoStamp - Image Geotagging</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); min-height: 100vh; color: #e4e4e7; }
+    #app { min-height: 100vh; display: flex; flex-direction: column; }
+    
+    header { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo svg { width: 32px; height: 32px; }
+    .logo span { font-weight: 600; font-size: 17px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { text-decoration: none; color: #a1a1aa; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: #e4e4e7; }
+    .nav-links .btn { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+    
+    .lang-selector { position: relative; }
+    .lang-selector .lang-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-size: 13px; color: #e4e4e7; }
+    .lang-selector .lang-btn:hover { background: rgba(255,255,255,0.1); }
+    .lang-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: #1f1f2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; min-width: 140px; z-index: 100; }
+    .lang-dropdown.show { display: block; }
+    .lang-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; background: none; border: none; color: #e4e4e7; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; }
+    .lang-option:hover { background: rgba(255,255,255,0.08); }
+    
+    .main-content { 
+      flex: 1; 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 2fr; 
+      grid-template-rows: 1.5fr 0.8fr 0.7fr; 
+      gap: 16px; 
+      padding: 20px; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+      width: 100%; 
+      height: calc(100vh - 80px);
+      box-sizing: border-box;
+    }
+    .grid-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
+    .grid-item.comparison { grid-column: 1; grid-row: 1 / 3; }
+    .grid-item.upload { grid-column: 2; grid-row: 1; }
+    .grid-item.results { grid-column: 3; grid-row: 1 / 4; }
+    .grid-item.instructions { grid-column: 1; grid-row: 3; }
+    .grid-item.desktop { grid-column: 2; grid-row: 2; }
+    .grid-item.pricing { grid-column: 2; grid-row: 3; }
+    
+    .panel-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #f4f4f5; }
+    
+    .upload-area { background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; margin-top: 16px; }
+    .upload-area:hover, .upload-area.active { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
+    .upload-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+    .upload-icon svg { width: 24px; height: 24px; color: #a1a1aa; }
+    .upload-area h3 { font-size: 14px; font-weight: 500; color: #e4e4e7; margin-bottom: 4px; }
+    .upload-area p { font-size: 12px; color: #71717a; }
+    
+    #file-input { display: none; }
+    
+    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 16px; }
+    .preview-item { aspect-ratio: 4/3; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; position: relative; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item span { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; font-size: 10px; overflow: hidden; }
+    
+    .action-buttons { display: flex; gap: 8px; margin-top: 12px; }
+    .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #e4e4e7; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .steps { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .step { display: flex; gap: 10px; }
+    .step-number { width: 22px; height: 22px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
+    .step-title { font-size: 13px; font-weight: 500; color: #e4e4e7; margin-bottom: 2px; }
+    .step-desc { font-size: 11px; color: #71717a; }
+    
+    .comparison-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .comparison-item { aspect-ratio: 16/9; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative; }
+    .comparison-item .label { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    
+    .results-section { display: flex; flex-direction: column; }
+    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; overflow-y: auto; }
+    .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .result-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+    .result-card .info { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); }
+    .result-card .name { font-size: 12px; color: #a1a1aa; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .download-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+    .download-btn svg { width: 16px; height: 16px; color: #e4e4e7; }
+    
+    .pricing-section { text-align: center; }
+    .pricing-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #f4f4f5; }
+    .price { font-size: 28px; font-weight: 600; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .period { font-size: 12px; color: #71717a; margin-top: 4px; }
+    .pricing-section ul { margin-top: 16px; padding-left: 20px; text-align: left; }
+    .pricing-section li { padding: 4px 0; font-size: 12px; color: #a1a1aa; }
+    .pricing-section button { width: 100%; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; margin-top: 12px; }
+    
+    .desktop-app { text-align: center; }
+    .desktop-app h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #f4f4f5; }
+    .desktop-app .subtitle { font-size: 13px; color: #a78bfa; font-weight: 500; margin-top: 8px; }
+    .desktop-app p { font-size: 12px; color: #71717a; margin-top: 8px; }
+    .desktop-app .badge { display: inline-block; background: rgba(139, 92, 246, 0.15); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-top: 12px; }
+    
+    .privacy-badge { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 6px; padding: 8px 10px; font-size: 11px; color: #86efac; display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+    
+    .naming-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
+    .naming-modal-overlay.show { display: flex; }
+    .naming-modal { background: #1f1f2e; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+    .naming-modal h3 { margin: 0 0 20px 0; font-size: 18px; color: #f4f4f5; font-weight: 600; }
+    .naming-modal .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .naming-modal .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
+    .naming-modal .option.selected { background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.5); }
+    .naming-modal .option .label { font-size: 14px; color: #e4e4e7; }
+    .naming-modal .option .desc { font-size: 12px; color: #71717a; }
+    .naming-modal .custom-input { margin-top: 8px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e4e4e7; font-size: 14px; width: 100%; box-sizing: border-box; display: none; }
+    .naming-modal .custom-input.show { display: block; }
+    .naming-modal .buttons { display: flex; gap: 12px; }
+    .naming-modal .buttons button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
+    .naming-modal .btn-cancel { background: rgba(255,255,255,0.08); color: #a1a1aa; }
+    .naming-modal .btn-confirm { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
+    
+    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; }
+    .loading-overlay.show { display: flex; }
+    .loading-content { text-align: center; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin: 0 auto; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #06b6d4); width: 0%; transition: width 0.3s; }
+    
+    .toast { display: none; position: fixed; bottom: 24px; right: 24px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 14px 18px; align-items: center; gap: 10px; }
+    .toast.show { display: flex; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    
+    .debug-panel { position: fixed; bottom: 80px; left: 24px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; max-width: 400px; max-height: 300px; overflow-y: auto; z-index: 999; font-family: monospace; font-size: 11px; color: #86efac; display: none; }
+    .debug-panel.show { display: block; }
+    .debug-panel h4 { color: #f4f4f5; margin-bottom: 8px; font-size: 12px; }
+    .debug-panel .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .debug-panel .log-entry:last-child { border-bottom: none; }
+    
+    @media (max-width: 900px) { 
+      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .grid-item.comparison, .grid-item.upload, .grid-item.results,
+      .grid-item.instructions, .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
+          <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/><path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#fff"/>
+        </svg>
+        <span>GeoStamp</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features" id="nav-features">Features</a>
+        <a href="#pricing" id="nav-pricing">Pricing</a>
+        <a href="#desktop" id="nav-desktop">Desktop</a>
+        <a href="#" class="btn" id="nav-started">Get Started</a>
+        <div class="lang-selector">
+          <button class="lang-btn" id="lang-btn">
+            <span id="lang-flag">🇺🇸</span>
+            <span id="lang-code">EN</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <div class="lang-dropdown" id="lang-dropdown">
+            <button class="lang-option" data-lang="en">🇺🇸 English</button>
+            <button class="lang-option" data-lang="zh">🇹🇼 繁體中文</button>
+            <button class="lang-option" data-lang="fr">🇫🇷 Français</button>
+            <button class="lang-option" data-lang="es">🇪🇸 Español</button>
+            <button class="lang-option" data-lang="ru">🇷🇺 Русский</button>
+            <button class="lang-option" data-lang="ar">🇸🇦 العربية</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="grid-item comparison">
+        <h3 id="comparison-title">Before & After</h3>
+        <div class="comparison-grid">
+          <div class="comparison-item">
+            <div class="label" id="comparison-original">Original</div>
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3C/svg%3E" alt="Before" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div class="comparison-item">
+            <div class="label" id="comparison-annotated">Annotated</div>
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3Crect x='0' y='185' width='400' height='40' fill='rgba(0,0,0,0.7)'/%3E%3Ctext x='16' y='210' fill='white' font-size='12' font-family='Arial'%3EShanghai Bund | 2024-01-15 10:30 | #1%3C/text%3E%3C/svg%3E" alt="After" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-item upload">
+        <h3 class="panel-title" id="panel-upload">Upload Images</h3>
+        <input type="file" id="file-input" accept="image/*" multiple>
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+          </div>
+          <h3 id="upload-title">Drop images here</h3>
+          <p id="upload-desc">or click to browse</p>
+        </div>
+        <div id="preview-container" class="preview-grid" style="display: none;"></div>
+        <div id="empty-preview" style="text-align: center; padding: 12px 0; color: #71717a; font-size: 12px;"><p id="empty-preview-text">No images selected</p></div>
+        <div class="action-buttons">
+          <button id="process-btn" class="btn btn-primary" disabled><span id="btn-annotate">Annotate Images</span></button>
+          <button id="download-all-btn" class="btn btn-secondary" disabled><span id="btn-download-all">Download All</span></button>
+        </div>
+        <div class="privacy-badge"><span>🔒</span><span id="privacy-text">Your images are processed locally</span></div>
+        <div style="margin-top: 8px;">
+          <button id="toggle-debug" style="font-size: 10px; padding: 4px 8px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #a78bfa; border-radius: 4px; cursor: pointer;">Toggle Debug</button>
+        </div>
+      </div>
+
+      <div class="grid-item results" id="results-section">
+        <h3 id="results-title">Annotated Images</h3>
+        <div id="results-grid" class="results-grid"></div>
+        <div id="empty-results" style="text-align: center; padding: 40px 0; color: #71717a; font-size: 12px;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          <p>Process images to see results</p>
+        </div>
+      </div>
+
+      <div class="grid-item instructions">
+        <h3 id="instructions-title">How It Works</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title" id="step1-title">Upload Images</div>
+              <div class="step-desc" id="step1-desc">Drag or click to upload photos with GPS data</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title" id="step2-title">Choose Naming</div>
+              <div class="step-desc" id="step2-desc">Select your preferred file naming convention</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title" id="step3-title">Download</div>
+              <div class="step-desc" id="step3-desc">Get your geotagged images with location overlays</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-item desktop">
+        <div class="desktop-app">
+          <h3 id="desktop-title">Desktop App</h3>
+          <div class="subtitle" id="desktop-subtitle">Unlimited Processing</div>
+          <p id="desktop-desc">Process unlimited photos offline with local processing</p>
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.Setup.exe" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Windows (.exe)
+            </a>
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.dmg" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              macOS (.dmg)
+            </a>
+            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/geostamp_1.0.0_amd64.deb" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Linux (.deb)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-item pricing">
+        <div class="pricing-section">
+          <h3 id="pricing-title">Subscription</h3>
+          <div class="price" id="pricing-price">$7.99</div>
+          <div class="period" id="pricing-period">per month</div>
+          <ul>
+            <li id="pricing-feature1">Unlimited image processing</li>
+            <li id="pricing-feature2">HD quality output</li>
+            <li id="pricing-feature3">Batch processing support</li>
+            <li id="pricing-feature4">Priority support</li>
+          </ul>
+          <button id="pricing-btn">Subscribe Now</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="naming-modal-overlay" class="naming-modal-overlay">
+      <div class="naming-modal">
+        <h3 id="naming-title">File Naming</h3>
+        <div class="options">
+          <label class="option selected"><input type="radio" name="naming-rule-modal" value="date" checked><div><div class="label" id="naming-date">Date_Serial</div><div class="desc" id="naming-date-desc">20240115_001.jpg</div></div></label>
+          <label class="option"><input type="radio" name="naming-rule-modal" value="original"><div><div class="label" id="naming-original">Original Filename</div><div class="desc" id="naming-original-desc">Keep original name</div></div></label>
+          <label class="option"><input type="radio" name="naming-rule-modal" value="gps"><div><div class="label" id="naming-gps">GPS Coordinates</div><div class="desc" id="naming-gps-desc">38.93_121.60_001.jpg</div></div></label>
+          <label class="option"><input type="radio" name="naming-rule-modal" value="custom"><div><div class="label" id="naming-custom">Custom Prefix</div><div class="desc" id="naming-custom-desc">Enter custom text</div></div></label>
+        </div>
+        <input type="text" id="custom-prefix-modal" class="custom-input" placeholder="Enter custom prefix">
+        <div class="buttons"><button class="btn-cancel" id="naming-cancel">Cancel</button><button class="btn-confirm" id="naming-confirm">Annotate</button></div>
+      </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-content"><div class="loading-spinner"></div><div class="loading-text" id="loading-text">Processing images...</div><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div></div>
+    </div>
+
+    <div id="toast" class="toast"><span class="icon">✓</span><span class="text" id="toast-text">Processing complete!</span></div>
+    
+    <div id="debug-panel" class="debug-panel">
+      <h4>Debug Log</h4>
+      <div id="debug-log"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    const translations = {
+      en: {
+        'nav-features': 'Features',
+        'nav-pricing': 'Pricing',
+        'nav-desktop': 'Desktop',
+        'nav-started': 'Get Started',
+        'panel-upload': 'Upload Images',
+        'upload-title': 'Drop images here',
+        'upload-desc': 'or click to browse',
+        'empty-preview-text': 'No images selected',
+        'btn-annotate': 'Annotate Images',
+        'btn-download-all': 'Download All',
+        'privacy-text': 'Your images are processed locally',
+        'instructions-title': 'How It Works',
+        'step1-title': 'Upload Images',
+        'step1-desc': 'Drag or click to upload photos with GPS data',
+        'step2-title': 'Choose Naming',
+        'step2-desc': 'Select your preferred file naming convention',
+        'step3-title': 'Download',
+        'step3-desc': 'Get your geotagged images with location overlays',
+        'comparison-title': 'Before & After',
+        'comparison-original': 'Original',
+        'comparison-annotated': 'Annotated',
+        'results-title': 'Annotated Images',
+        'pricing-title': 'Subscription',
+        'pricing-price': '$7.99',
+        'pricing-period': 'per month',
+        'pricing-feature1': 'Unlimited image processing',
+        'pricing-feature2': 'HD quality output',
+        'pricing-feature3': 'Batch processing support',
+        'pricing-feature4': 'Priority support',
+        'pricing-btn': 'Subscribe Now',
+        'desktop-title': 'Desktop App',
+        'desktop-subtitle': 'Coming Soon',
+        'desktop-desc': 'Offline processing for faster and more secure workflow',
+        'desktop-badge': 'Stay tuned',
+        'naming-title': 'File Naming',
+        'naming-date': 'Date_Serial',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': 'Original Filename',
+        'naming-original-desc': 'Keep original name',
+        'naming-gps': 'GPS Coordinates',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': 'Custom Prefix',
+        'naming-custom-desc': 'Enter custom text',
+        'naming-cancel': 'Cancel',
+        'naming-confirm': 'Annotate',
+        'loading-text': 'Processing images...',
+        'toast-success': 'Processing complete!'
+      },
+      zh: {
+        'nav-features': '功能',
+        'nav-pricing': '價格',
+        'nav-desktop': '桌面版',
+        'nav-started': '開始使用',
+        'panel-upload': '上傳圖片',
+        'upload-title': '拖曳圖片到這裡',
+        'upload-desc': '或點擊選擇檔案',
+        'empty-preview-text': '請選擇圖片',
+        'btn-annotate': '開始標註',
+        'btn-download-all': '下載全部',
+        'privacy-text': '圖片僅在瀏覽器處理',
+        'instructions-title': '使用方法',
+        'step1-title': '上傳圖片',
+        'step1-desc': '拖曳或點擊上傳包含GPS資訊的照片',
+        'step2-title': '選擇命名',
+        'step2-desc': '選擇您喜歡的檔案命名方式',
+        'step3-title': '下載',
+        'step3-desc': '取得帶地理位置標註的圖片',
+        'comparison-title': '效果對比',
+        'comparison-original': '原圖',
+        'comparison-annotated': '標註後',
+        'results-title': '已標註圖片',
+        'pricing-title': '訂閱服務',
+        'pricing-price': '$7.99',
+        'pricing-period': '每月',
+        'pricing-feature1': '無限圖片處理',
+        'pricing-feature2': '高品質圖片輸出',
+        'pricing-feature3': '批次處理支援',
+        'pricing-feature4': '優先技術支援',
+        'pricing-btn': '立即訂閱',
+        'desktop-title': '桌面應用',
+        'desktop-subtitle': '即將推出',
+        'desktop-desc': '離線處理，更快更安全',
+        'desktop-badge': '敬請期待',
+        'naming-title': '選擇命名規則',
+        'naming-date': '日期_序號',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': '原檔名',
+        'naming-original-desc': '保持原始檔名不變',
+        'naming-gps': 'GPS座標',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': '自訂前綴',
+        'naming-custom-desc': '輸入自訂文字',
+        'naming-cancel': '取消',
+        'naming-confirm': '確認',
+        'loading-text': '正在處理圖片...',
+        'toast-success': '處理完成！'
+      },
+      fr: {
+        'nav-features': 'Fonctionnalités',
+        'nav-pricing': 'Tarifs',
+        'nav-desktop': 'Bureau',
+        'nav-started': 'Commencer',
+        'panel-upload': 'Télécharger des images',
+        'upload-title': 'Déposez les images ici',
+        'upload-desc': 'ou cliquez pour parcourir',
+        'empty-preview-text': 'Aucune image sélectionnée',
+        'btn-annotate': 'Annoter les images',
+        'btn-download-all': 'Tout télécharger',
+        'privacy-text': 'Vos images sont traitées localement',
+        'instructions-title': 'Comment ça marche',
+        'step1-title': 'Télécharger des images',
+        'step1-desc': 'Glissez ou cliquez pour télécharger',
+        'step2-title': 'Choisir le nom',
+        'step2-desc': 'Sélectionnez votre convention',
+        'step3-title': 'Télécharger',
+        'step3-desc': 'Obtenez vos images géotagées',
+        'comparison-title': 'Avant / Après',
+        'comparison-original': 'Original',
+        'comparison-annotated': 'Annoté',
+        'results-title': 'Images annotées',
+        'pricing-title': 'Abonnement',
+        'pricing-price': '7,99 $',
+        'pricing-period': 'par mois',
+        'pricing-feature1': 'Traitement illimité',
+        'pricing-feature2': 'Sortie HD',
+        'pricing-feature3': 'Traitement par lots',
+        'pricing-feature4': 'Support prioritaire',
+        'pricing-btn': 'S\'abonner',
+        'desktop-title': 'Application de bureau',
+        'desktop-subtitle': 'Bientôt disponible',
+        'desktop-desc': 'Traitement hors ligne',
+        'desktop-badge': 'À venir',
+        'naming-title': 'Nom de fichier',
+        'naming-date': 'Date_Série',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': 'Nom original',
+        'naming-original-desc': 'Conserver le nom',
+        'naming-gps': 'Coordonnées GPS',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': 'Préfixe personnalisé',
+        'naming-custom-desc': 'Entrez du texte',
+        'naming-cancel': 'Annuler',
+        'naming-confirm': 'Annoter',
+        'loading-text': 'Traitement...',
+        'toast-success': 'Terminé!'
+      },
+      es: {
+        'nav-features': 'Características',
+        'nav-pricing': 'Precios',
+        'nav-desktop': 'Escritorio',
+        'nav-started': 'Empezar',
+        'panel-upload': 'Subir imágenes',
+        'upload-title': 'Arrastra imágenes aquí',
+        'upload-desc': 'o haz clic para buscar',
+        'empty-preview-text': 'No hay imágenes',
+        'btn-annotate': 'Anotar imágenes',
+        'btn-download-all': 'Descargar todo',
+        'privacy-text': 'Procesamiento local',
+        'instructions-title': 'Cómo funciona',
+        'step1-title': 'Subir imágenes',
+        'step1-desc': 'Arrastra o haz clic',
+        'step2-title': 'Elegir nombre',
+        'step2-desc': 'Seleccione su convención',
+        'step3-title': 'Descargar',
+        'step3-desc': 'Obtenga imágenes geotaggeadas',
+        'comparison-title': 'Antes / Después',
+        'comparison-original': 'Original',
+        'comparison-annotated': 'Anotado',
+        'results-title': 'Imágenes anotadas',
+        'pricing-title': 'Suscripción',
+        'pricing-price': '$7,99',
+        'pricing-period': 'por mes',
+        'pricing-feature1': 'Procesamiento ilimitado',
+        'pricing-feature2': 'Salida HD',
+        'pricing-feature3': 'Procesamiento por lotes',
+        'pricing-feature4': 'Soporte prioritario',
+        'pricing-btn': 'Suscribirse',
+        'desktop-title': 'Aplicación de escritorio',
+        'desktop-subtitle': 'Próximamente',
+        'desktop-desc': 'Procesamiento sin conexión',
+        'desktop-badge': 'Próximamente',
+        'naming-title': 'Nombre de archivo',
+        'naming-date': 'Fecha_Serie',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': 'Nombre original',
+        'naming-original-desc': 'Mantener nombre',
+        'naming-gps': 'Coordenadas GPS',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': 'Prefijo personalizado',
+        'naming-custom-desc': 'Ingrese texto',
+        'naming-cancel': 'Cancelar',
+        'naming-confirm': 'Anotar',
+        'loading-text': 'Procesando...',
+        'toast-success': '¡Completado!'
+      },
+      ru: {
+        'nav-features': 'Функции',
+        'nav-pricing': 'Цены',
+        'nav-desktop': 'Десктоп',
+        'nav-started': 'Начать',
+        'panel-upload': 'Загрузить изображения',
+        'upload-title': 'Перетащите изображения',
+        'upload-desc': 'или нажмите для выбора',
+        'empty-preview-text': 'Изображения не выбраны',
+        'btn-annotate': 'Аннотировать',
+        'btn-download-all': 'Скачать все',
+        'privacy-text': 'Локальная обработка',
+        'instructions-title': 'Как это работает',
+        'step1-title': 'Загрузить изображения',
+        'step1-desc': 'Перетащите или нажмите',
+        'step2-title': 'Выбрать именование',
+        'step2-desc': 'Выберите схему именования',
+        'step3-title': 'Скачать',
+        'step3-desc': 'Получите геотеггированные изображения',
+        'comparison-title': 'До / После',
+        'comparison-original': 'Оригинал',
+        'comparison-annotated': 'Аннотирован',
+        'results-title': 'Аннотированные изображения',
+        'pricing-title': 'Подписка',
+        'pricing-price': '7,99 $',
+        'pricing-period': 'в месяц',
+        'pricing-feature1': 'Безлимитная обработка',
+        'pricing-feature2': 'Выход HD',
+        'pricing-feature3': 'Пакетная обработка',
+        'pricing-feature4': 'Приоритетная поддержка',
+        'pricing-btn': 'Подписаться',
+        'desktop-title': 'Десктопное приложение',
+        'desktop-subtitle': 'Скоро',
+        'desktop-desc': 'Оффлайн-обработка',
+        'desktop-badge': 'Скоро',
+        'naming-title': 'Именование файла',
+        'naming-date': 'Дата_Номер',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': 'Имя файла',
+        'naming-original-desc': 'Сохранить имя',
+        'naming-gps': 'GPS-координаты',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': 'Пользовательский префикс',
+        'naming-custom-desc': 'Введите текст',
+        'naming-cancel': 'Отмена',
+        'naming-confirm': 'Аннотировать',
+        'loading-text': 'Обработка...',
+        'toast-success': 'Готово!'
+      },
+      ar: {
+        'nav-features': 'الميزات',
+        'nav-pricing': 'الأسعار',
+        'nav-desktop': 'سطح المكتب',
+        'nav-started': 'ابدأ',
+        'panel-upload': 'رفع الصور',
+        'upload-title': 'اسحب الصور إلى هنا',
+        'upload-desc': 'أو اضغط للتصفح',
+        'empty-preview-text': 'لم تُختار صوراً',
+        'btn-annotate': 'تعليق الصور',
+        'btn-download-all': 'تنزيل الكل',
+        'privacy-text': 'معالجة محلية',
+        'instructions-title': 'كيف يعمل',
+        'step1-title': 'رفع الصور',
+        'step1-desc': 'اسحب أو اضغط',
+        'step2-title': 'اختر التسمية',
+        'step2-desc': 'حدد تقنية التسمية',
+        'step3-title': 'تنزيل',
+        'step3-desc': 'احصل على الصور الموسومة',
+        'comparison-title': 'قبل / بعد',
+        'comparison-original': 'الأصل',
+        'comparison-annotated': 'مُعليق',
+        'results-title': 'الصور المُعليقة',
+        'pricing-title': 'الاشتراك',
+        'pricing-price': '7.99 دولار',
+        'pricing-period': 'في الشهر',
+        'pricing-feature1': 'معالجة غير مقيدة',
+        'pricing-feature2': 'إخراج HD',
+        'pricing-feature3': 'معالجة المجمعة',
+        'pricing-feature4': 'دعم أولي',
+        'pricing-btn': 'اشترك الآن',
+        'desktop-title': 'تطبيق سطح المكتب',
+        'desktop-subtitle': 'قريباً',
+        'desktop-desc': 'معالجة دون اتصال',
+        'desktop-badge': 'قريباً',
+        'naming-title': 'تسمية الملف',
+        'naming-date': 'التاريخ_الرقم',
+        'naming-date-desc': '20240115_001.jpg',
+        'naming-original': 'اسم الملف الأصلي',
+        'naming-original-desc': 'احفظ الاسم',
+        'naming-gps': 'إحداثيات GPS',
+        'naming-gps-desc': '38.93_121.60_001.jpg',
+        'naming-custom': 'البادئة المخصصة',
+        'naming-custom-desc': 'أدخل نصًا',
+        'naming-cancel': 'إلغاء',
+        'naming-confirm': 'تعليق',
+        'loading-text': 'جارٍ المعالجة...',
+        'toast-success': 'اكتمل!'
+      }
+    };
+
+    let currentLang = 'en';
+    let selectedFiles = [];
+    let processedImages = [];
+    let currentNamingRule = 'date';
+    let currentCustomPrefix = '';
+    let showDebug = false;
+
+    const geocodeCache = new Map();
+    const geocodeQueue = [];
+    let isProcessingQueue = false;
+    const RATE_LIMIT_MS = 1100;
+
+    function debugLog(message) {
+      const logDiv = document.getElementById('debug-log');
+      if (!logDiv) return;
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function toggleDebugPanel() {
+      showDebug = !showDebug;
+      const panel = document.getElementById('debug-panel');
+      if (panel) {
+        if (showDebug) panel.classList.add('show');
+        else panel.classList.remove('show');
+      }
+    }
+
+    function toggleLangDropdown() {
+      const dropdown = document.getElementById('lang-dropdown');
+      if (dropdown) dropdown.classList.toggle('show');
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const trans = translations[lang];
+      const flags = { 'en': '🇺🇸', 'zh': '🇹🇼', 'fr': '🇫🇷', 'es': '🇪🇸', 'ru': '🇷🇺', 'ar': '🇸🇦' };
+      const codes = { 'en': 'EN', 'zh': '中文', 'fr': 'FR', 'es': 'ES', 'ru': 'RU', 'ar': 'AR' };
+      const flagEl = document.getElementById('lang-flag');
+      const codeEl = document.getElementById('lang-code');
+      const dropdown = document.getElementById('lang-dropdown');
+      
+      if (flagEl) flagEl.textContent = flags[lang];
+      if (codeEl) codeEl.textContent = codes[lang];
+      if (dropdown) dropdown.classList.remove('show');
+      
+      Object.keys(trans).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.textContent = trans[key];
+      });
+      
+      const toastText = document.getElementById('toast-text');
+      const loadingText = document.getElementById('loading-text');
+      if (toastText) toastText.textContent = trans['toast-success'];
+      if (loadingText) loadingText.textContent = trans['loading-text'];
+      
+      document.documentElement.lang = lang;
+      document.body.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+    }
+
+    function handleFileSelect(e) { 
+      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
+      if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
+        showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
+        return;
+      }
+      if (!isSubscriber) {
+        selectedFiles = files.slice(0, MAX_FREE_IMAGES);
+      } else {
+        selectedFiles = files;
+      }
+      updatePreview(); 
+    }
+
+    function handleDrop(e) { 
+      e.preventDefault(); 
+      e.currentTarget.classList.remove('active'); 
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); 
+      if (files.length > 0) { 
+        selectedFiles = [...selectedFiles, ...files]; 
+        updatePreview(); 
+      } 
+    }
+
+    function updatePreview() {
+      const preview = document.getElementById('preview-container');
+      const emptyPreview = document.getElementById('empty-preview');
+      const processBtn = document.getElementById('process-btn');
+      const downloadBtn = document.getElementById('download-all-btn');
+
+      if (!preview || !emptyPreview || !processBtn || !downloadBtn) return;
+
+      if (selectedFiles.length > 0) {
+        preview.style.display = 'grid'; 
+        emptyPreview.style.display = 'none';
+        processBtn.disabled = false; 
+        downloadBtn.disabled = true;
+        preview.innerHTML = '';
+        selectedFiles.slice(0, 6).forEach((file, i) => {
+          const item = document.createElement('div'); 
+          item.className = 'preview-item';
+          const img = document.createElement('img'); 
+          img.src = URL.createObjectURL(file);
+          const filename = document.createElement('span'); 
+          filename.className = 'filename'; 
+          filename.textContent = file.name;
+          item.appendChild(img); 
+          item.appendChild(filename); 
+          preview.appendChild(item);
+        });
+        if (selectedFiles.length > 6) {
+          const more = document.createElement('div'); 
+          more.className = 'preview-item';
+          more.style.display = 'flex'; 
+          more.style.alignItems = 'center'; 
+          more.style.justifyContent = 'center'; 
+          more.style.color = '#71717a';
+          more.textContent = `+${selectedFiles.length - 6}`; 
+          preview.appendChild(more);
+        }
+      } else { 
+        preview.style.display = 'none'; 
+        emptyPreview.style.display = 'block'; 
+        processBtn.disabled = true; 
+        downloadBtn.disabled = true; 
+      }
+    }
+
+    function showNamingModal() { 
+      const overlay = document.getElementById('naming-modal-overlay');
+      if (overlay) overlay.classList.add('show'); 
+    }
+
+    function hideNamingModal() { 
+      const overlay = document.getElementById('naming-modal-overlay');
+      if (overlay) overlay.classList.remove('show'); 
+    }
+
+    function confirmNaming() {
+      const checked = document.querySelector('input[name="naming-rule-modal"]:checked');
+      const customInput = document.getElementById('custom-prefix-modal');
+      
+      if (checked) currentNamingRule = checked.value;
+      if (customInput) currentCustomPrefix = customInput.value.trim();
+      
+      hideNamingModal(); 
+      processImages();
+    }
+
+    async function extractExif(file) {
+      try {
+        debugLog(`Processing file: ${file.name} (${file.size} bytes)`);
+        const buffer = await file.arrayBuffer();
+        const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
+        const dataView = new DataView(buffer);
+        
+        if (dataView.getUint16(0) !== 0xFFD8) {
+          debugLog('Not a JPEG file');
+          return result;
+        }
+        
+        let offset = 2;
+        while (offset < buffer.byteLength - 2) {
+          const marker = dataView.getUint16(offset);
+          
+          if (marker === 0xFFE1) {
+            const length = dataView.getUint16(offset + 2);
+            const exifOffset = offset + 4;
+            if (dataView.getUint32(exifOffset) === 0x45786966) {
+              debugLog('Found EXIF header');
+              const tiffOffset = exifOffset + 6;
+              const byteOrder = dataView.getUint16(tiffOffset);
+              const isLittleEndian = byteOrder === 0x4949;
+              
+              const tiffMarker = dataView.getUint16(tiffOffset + 2, isLittleEndian);
+              
+              if (tiffMarker === 0x002A) {
+                const firstIfdOffset = dataView.getUint32(tiffOffset + 4, isLittleEndian) + tiffOffset;
+                const exifData = parseTiffIfd(dataView, tiffOffset, firstIfdOffset, isLittleEndian);
+                if (exifData) {
+                  result.hasExif = true; 
+                  result.timestamp = exifData.timestamp;
+                  if (exifData.gpsLatitude !== undefined && exifData.gpsLongitude !== undefined) {
+                    const lat = exifData.gpsLatitude;
+                    const lng = exifData.gpsLongitude;
+                    debugLog(`GPS Coords found: ${lat}, ${lng}`);
+                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                      result.gps = { lat, lng }; 
+                      result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    }
+                  }
+                }
+              }
+              break;
+            }
+          }
+          offset += dataView.getUint16(offset + 2) + 2;
+        }
+        return result;
+      } catch (e) {
+        debugLog(`EXIF error: ${e.message}`);
+        return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
+      }
+    }
+
+    function parseTiffIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
+      const result = {};
+      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
+      let entryOffset = ifdOffset + 2;
+
+      for (let i = 0; i < entries; i++) {
+        const tag = dataView.getUint16(entryOffset, isLittleEndian);
+        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
+        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
+        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
+
+        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
+        else valueOffset += tiffOffset;
+
+        if (tag === 0x0132) result.timestamp = readString(dataView, valueOffset, count);
+        else if (tag === 0x8769) {
+          const exifIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
+          Object.assign(result, parseTiffIfd(dataView, tiffOffset, exifIfdOffset, isLittleEndian));
+        } else if (tag === 0x8825) {
+          const gpsIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
+          Object.assign(result, parseGpsIfd(dataView, tiffOffset, gpsIfdOffset, isLittleEndian));
+        }
+        entryOffset += 12;
+      }
+
+      const nextIfd = dataView.getUint32(entryOffset, isLittleEndian);
+      if (nextIfd !== 0) Object.assign(result, parseTiffIfd(dataView, tiffOffset, nextIfd + tiffOffset, isLittleEndian));
+      return result;
+    }
+
+    function parseGpsIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
+      const result = {};
+      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
+      let entryOffset = ifdOffset + 2;
+
+      let latRef, lonRef, latDegNum, latDegDen, latMinNum, latMinDen, latSecNum, latSecDen;
+      let lonDegNum, lonDegDen, lonMinNum, lonMinDen, lonSecNum, lonSecDen;
+
+      for (let i = 0; i < entries; i++) {
+        const tag = dataView.getUint16(entryOffset, isLittleEndian);
+        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
+        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
+        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
+
+        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
+        else valueOffset += tiffOffset;
+
+        switch (tag) {
+          case 0x0001: latRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
+          case 0x0002: if (format === 5 && count === 3) {
+            latDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
+            latDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
+            latMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
+            latMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
+            latSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
+            latSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
+          } break;
+          case 0x0003: lonRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
+          case 0x0004: if (format === 5 && count === 3) {
+            lonDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
+            lonDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
+            lonMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
+            lonMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
+            lonSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
+            lonSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
+          } break;
+        }
+        entryOffset += 12;
+      }
+
+      if (latDegNum !== undefined) {
+        const latDeg = latDegNum / latDegDen;
+        const latMin = latMinNum / latMinDen;
+        const latSec = latSecNum / latSecDen;
+        let lat = latDeg + latMin/60 + latSec/3600;
+        if (latRef === 'S') lat = -lat;
+        result.gpsLatitude = lat;
+      }
+
+      if (lonDegNum !== undefined) {
+        const lonDeg = lonDegNum / lonDegDen;
+        const lonMin = lonMinNum / lonMinDen;
+        const lonSec = lonSecNum / lonSecDen;
+        let lon = lonDeg + lonMin/60 + lonSec/3600;
+        if (lonRef === 'W') lon = -lon;
+        result.gpsLongitude = lon;
+      }
+      debugLog(`Parsed GPS: ${result.gpsLatitude}, ${result.gpsLongitude}`);
+      return result;
+    }
+
+    function getFormatSize(format) { 
+      switch (format) { 
+        case 1: return 1; 
+        case 2: return 1; 
+        case 3: return 2; 
+        case 4: return 4; 
+        case 5: return 8; 
+        case 7: return 1; 
+        default: return 1; 
+      } 
+    }
+    
+    function readString(dataView, offset, length) { 
+      let str = ''; 
+      for (let i = 0; i < length; i++) { 
+        const char = dataView.getUint8(offset + i); 
+        if (char === 0) break; 
+        str += String.fromCharCode(char); 
+      } 
+      return str; 
+    }
+
+    function getCacheKey(lat, lng) {
+      return `${lat.toFixed(5)}_${lng.toFixed(5)}`;
+    }
+
+    function getCachedResult(lat, lng) {
+      const key = getCacheKey(lat, lng);
+      const cached = localStorage.getItem(`geocode_cache_${key}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed.expires > Date.now()) return parsed.address;
+        } catch {}
+      }
+      return null;
+    }
+
+    function setCachedResult(lat, lng, address) {
+      const key = getCacheKey(lat, lng);
+      const cacheEntry = { address, expires: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+      localStorage.setItem(`geocode_cache_${key}`, JSON.stringify(cacheEntry));
+      geocodeCache.set(key, address);
+    }
+
+    async function processQueue() {
+      if (isProcessingQueue || geocodeQueue.length === 0) return;
+      isProcessingQueue = true;
+
+      while (geocodeQueue.length > 0) {
+        const { lat, lng, resolve } = geocodeQueue.shift();
+        const cached = getCachedResult(lat, lng);
+        if (cached) { 
+          debugLog(`Using cached address: ${cached}`); 
+          resolve(cached); 
+          await sleep(RATE_LIMIT_MS / 3); 
+          continue; 
+        }
+
+        try {
+          debugLog(`Calling Nominatim API for ${lat}, ${lng}`);
+          debugLog(`API URL: https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+          const controller = new AbortController();
+          const timeout = setTimeout(() => {
+            debugLog('Nominatim API timeout - aborting request');
+            controller.abort();
+          }, 15000); // Increased to 15 seconds
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+            { 
+              headers: { 'User-Agent': 'GeoStamp/1.0 (contact@geostamp.app)' },
+              signal: controller.signal
+            }
+          );
+          clearTimeout(timeout);
+
+          debugLog(`Nominatim response status: ${res.status}`);
+          if (res.ok) {
+            const data = await res.json();
+            debugLog(`Nominatim response: ${JSON.stringify(data)}`);
+            const address = data.display_name 
+              ? (data.display_name.split(', ').length >= 3 
+                  ? data.display_name.split(', ').slice(0, 3).join(', ') 
+                  : data.display_name)
+              : null;
+            if (address) { 
+              setCachedResult(lat, lng, address);
+              debugLog(`Resolved address: ${address}`);
+            } else {
+              debugLog('No address in response');
+            }
+            resolve(address);
+          } else {
+            debugLog(`Nominatim API failed with status: ${res.status}`);
+            resolve(null); 
+          }
+        } catch(e) { 
+          debugLog(`Geocoding error: ${e.name} - ${e.message}`);
+          if (e.name === 'AbortError') {
+            debugLog('Request was aborted due to timeout');
+          }
+          resolve(null); 
+        }
+
+        await sleep(RATE_LIMIT_MS);
+      }
+      isProcessingQueue = false;
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function reverseGeocode(lat, lng) {
+      const cached = getCachedResult(lat, lng);
+      if (cached) return cached;
+
+      return new Promise(resolve => {
+        geocodeQueue.push({ lat, lng, resolve });
+        processQueue();
+      });
+    }
+
+    function getFileName(index, originalName, exif) {
+      const selectedRule = currentNamingRule; 
+      const serial = String(index + 1).padStart(3, '0');
+      switch (selectedRule) {
+        case 'date': return `${getTimestamp()}_${serial}.jpg`;
+        case 'original': return originalName;
+        case 'gps': 
+          if (exif && exif.gps) { 
+            const lat = exif.gps.lat.toFixed(2).replace('.', '_'); 
+            const lng = exif.gps.lng.toFixed(2).replace('.', '_'); 
+            return `${lat}_${lng}_${serial}.jpg`; 
+          } 
+          return `${getTimestamp()}_${serial}.jpg`;
+        case 'custom': 
+          const prefix = currentCustomPrefix || 'custom'; 
+          return `${prefix}_${serial}.jpg`;
+        default: return `${getTimestamp()}_${serial}.jpg`;
+      }
+    }
+
+    async function processImage(file, exif, serial) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas'); 
+          canvas.width = img.width; 
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d'); 
+          ctx.drawImage(img, 0, 0);
+
+          const barHeight = Math.max(35, Math.floor(img.height * 0.045));
+          const padding = Math.max(10, Math.floor(img.width * 0.01));
+          const fontSize = Math.max(11, Math.floor(barHeight * 0.4));
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; 
+          ctx.beginPath(); 
+          ctx.roundRect(0, img.height - barHeight, img.width, barHeight, [10, 0, 0, 0]); 
+          ctx.fill();
+          ctx.fillStyle = '#fff'; 
+          ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`; 
+          ctx.textBaseline = 'middle';
+
+          const parts = [];
+          if (exif.placeName && exif.placeName.trim()) parts.push(exif.placeName.trim());
+          else if (exif.location && exif.location.trim()) parts.push(exif.location.trim());
+          else parts.push('No GPS data');
+
+          if (exif.timestamp && exif.timestamp.trim()) parts.push(exif.timestamp.trim());
+          else parts.push(new Date().toISOString().replace('T', ' ').substring(0, 19));
+
+          let serialText = `#${typeof serial === 'number' ? serial : '?'}`;
+          if (currentNamingRule === 'custom' && currentCustomPrefix) serialText = `${currentCustomPrefix}_${typeof serial === 'number' ? serial : '?'}`;
+          else if (currentNamingRule === 'original') serialText = '';
+          if (serialText) parts.push(serialText);
+
+          const text = parts.join(' | ');
+          const textWidth = ctx.measureText(text).width;
+          if (textWidth > img.width - padding * 2) { 
+            const scaled = Math.max(9, fontSize * (img.width - padding * 2) / textWidth); 
+            ctx.font = `${scaled}px -apple-system, BlinkMacSystemFont, sans-serif`; 
+          }
+          ctx.fillText(text, padding, img.height - barHeight / 2);
+
+          canvas.toBlob(blob => { 
+            URL.revokeObjectURL(img.src); 
+            resolve({ blob, url: URL.createObjectURL(blob) });
+          }, 'image/jpeg', 0.95);
+        };
+
+        img.onerror = () => { resolve(null); };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    async function processImages() {
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const progressFill = document.getElementById('progress-fill');
+      const loadingText = document.getElementById('loading-text');
+      const downloadBtn = document.getElementById('download-all-btn');
+      const resultsSection = document.getElementById('results-section');
+      const resultsGrid = document.getElementById('results-grid');
+      const emptyResults = document.getElementById('empty-results');
+
+      loadingOverlay.classList.add('show'); 
+      progressFill.style.width = '0%'; 
+      resultsSection.style.display = 'none';
+      processedImages = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        loadingText.textContent = `${translations[currentLang]['loading-text']} ${i + 1}/${selectedFiles.length}`;
+        debugLog(`Processing image ${i + 1}/${selectedFiles.length}`);
+
+        const exif = await extractExif(selectedFiles[i]);
+        debugLog(`EXIF data: ${JSON.stringify(exif)}`);
+        debugLog(`GPS data: lat=${exif.gps?.lat}, lng=${exif.gps?.lng}, location=${exif.location}, placeName=${exif.placeName}`);
+        if (exif.gps) {
+          debugLog(`Calling reverse geocode for ${exif.gps.lat}, ${exif.gps.lng}`);
+          try {
+            const placeName = await reverseGeocode(exif.gps.lat, exif.gps.lng);
+            debugLog(`Reverse geocode result: ${placeName}`);
+            exif.placeName = placeName || exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
+            debugLog(`Final placeName set to: ${exif.placeName}`);
+          } catch(e) {
+            debugLog(`Reverse geocode error: ${e.message}`);
+            exif.placeName = exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
+          }
+        } else {
+          debugLog('No GPS data found in EXIF');
+        }
+
+        const processed = await processImage(selectedFiles[i], exif, i + 1);
+        if (processed) {
+          const fileName = getFileName(i, selectedFiles[i].name, exif);
+          processedImages.push({ ...processed, originalName: selectedFiles[i].name, fileName });
+        }
+        progressFill.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
+      }
+
+      loadingOverlay.classList.remove('show');
+      resultsSection.style.display = 'flex';
+      resultsGrid.innerHTML = '';
+      emptyResults.style.display = 'none';
+
+      processedImages.forEach((img, i) => {
+        const card = document.createElement('div'); 
+        card.className = 'result-card';
+        const imageEl = document.createElement('img'); 
+        imageEl.src = img.url;
+        const info = document.createElement('div'); 
+        info.className = 'info';
+        const name = document.createElement('span'); 
+        name.className = 'name'; 
+        name.textContent = img.fileName;
+        const btn = document.createElement('button'); 
+        btn.className = 'download-btn';
+        btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>';
+        btn.onclick = () => downloadSingle(img.blob, img.fileName);
+
+        info.appendChild(name); 
+        info.appendChild(btn);
+        card.appendChild(imageEl); 
+        card.appendChild(info);
+        resultsGrid.appendChild(card);
+      });
+
+      downloadBtn.disabled = false;
+      showToast(translations[currentLang]['toast-success']);
+    }
+
+    function downloadSingle(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = filename;
+      document.body.appendChild(a); 
+      a.click();
+      document.body.removeChild(a); 
+      URL.revokeObjectURL(url);
+    }
+
+    async function downloadAllImages() {
+      if (processedImages.length === 0) return;
+      if (processedImages.length === 1) {
+        downloadSingle(processedImages[0].blob, processedImages[0].fileName);
+        return;
+      }
+
+      const zip = new JSZip();
+      processedImages.forEach(img => {
+        zip.file(img.fileName, img.blob);
+      });
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = `annotated_images_${timestamp}.zip`;
+      document.body.appendChild(a); 
+      a.click(); 
+      document.body.removeChild(a); 
+      URL.revokeObjectURL(url);
+    }
+
+    function showToast(message) { 
+      const toast = document.getElementById('toast'); 
+      const toastText = document.getElementById('toast-text'); 
+      toastText.textContent = message; 
+      toast.classList.add('show'); 
+      setTimeout(() => toast.classList.remove('show'), 3000); 
+    }
+
+    function getSerial() { 
+      const today = new Date(); 
+      const key = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+      const stored = localStorage.getItem(`serial_${key}`); 
+      const serial = stored ? parseInt(stored, 10) + 1 : 1; 
+      localStorage.setItem(`serial_${key}`, serial.toString()); 
+      return serial; 
+    }
+    
+    function getTimestamp() { 
+      const now = new Date(); 
+      return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('lang-btn').addEventListener('click', toggleLangDropdown);
+      document.getElementById('toggle-debug').addEventListener('click', toggleDebugPanel);
+      document.getElementById('file-input').addEventListener('change', handleFileSelect);
+      document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
+      document.getElementById('upload-area').addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('active'); });
+      document.getElementById('upload-area').addEventListener('dragleave', (e) => { e.preventDefault(); e.currentTarget.classList.remove('active'); });
+      document.getElementById('upload-area').addEventListener('drop', handleDrop);
+      document.getElementById('process-btn').addEventListener('click', showNamingModal);
+      document.getElementById('download-all-btn').addEventListener('click', downloadAllImages);
+      document.getElementById('naming-cancel').addEventListener('click', hideNamingModal);
+      document.getElementById('naming-confirm').addEventListener('click', confirmNaming);
+      
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', () => setLanguage(opt.dataset.lang));
+      });
+
+      document.querySelectorAll('input[name="naming-rule-modal"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          document.querySelectorAll('.naming-modal .option').forEach(opt => opt.classList.remove('selected'));
+          e.target.closest('.option').classList.add('selected');
+          const customInput = document.getElementById('custom-prefix-modal');
+          if (e.target.value === 'custom') { customInput.classList.add('show'); customInput.disabled = false; }
+          else { customInput.classList.remove('show'); customInput.disabled = true; }
+        });
+      });
+    });
+  </script>
+</body>
+>>>>>>> e4eba883a04c08465efdd112d57d260134d78910
 </html>
