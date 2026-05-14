@@ -608,6 +608,8 @@
     let currentNamingRule = 'date';
     let currentCustomPrefix = '';
     let showDebug = false;
+    let isSubscriber = false;
+    const MAX_FREE_IMAGES = 3;
 
     const geocodeCache = new Map();
     const geocodeQueue = [];
@@ -693,8 +695,16 @@
       if (selectedFiles.length > 0) {
         preview.style.display = 'grid'; 
         emptyPreview.style.display = 'none';
-        processBtn.disabled = false; 
+        
+        const exceedsLimit = !isSubscriber && selectedFiles.length > MAX_FREE_IMAGES;
+        processBtn.disabled = exceedsLimit; 
         downloadBtn.disabled = true;
+        
+        if (exceedsLimit) {
+          processBtn.title = `Free users can only process ${MAX_FREE_IMAGES} images at once. Subscribe for unlimited batch processing.`;
+        } else {
+          processBtn.title = '';
+        }
         preview.innerHTML = '';
         selectedFiles.slice(0, 6).forEach((file, i) => {
           const item = document.createElement('div'); 
@@ -1222,6 +1232,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      isSubscriber = localStorage.getItem('isSubscriber') === 'true';
+      
       document.getElementById('lang-btn').addEventListener('click', toggleLangDropdown);
       document.getElementById('toggle-debug').addEventListener('click', toggleDebugPanel);
       document.getElementById('file-input').addEventListener('change', handleFileSelect);
