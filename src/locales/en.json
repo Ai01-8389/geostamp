@@ -1,0 +1,130 @@
+{
+  "title": "GeoStamp - Image Geotagging Tool",
+  "tagline": "Annotate images with geographic coordinates, location names, and timestamps",
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "login": "Sign In",
+    "dashboard": "Dashboard",
+    "getStarted": "Get Started"
+  },
+  "hero": {
+    "heading": "Annotate images with geographic coordinates",
+    "subheading": "Professional geotagging tool, entirely in your browser. No uploads, no servers, completely private.",
+    "uploadButton": "Upload Image",
+    "learnMore": "Learn more"
+  },
+  "upload": {
+    "dropZone": "Drop your images here",
+    "clickBrowse": "or click to browse",
+    "selected": "{{count}} image selected — click to change",
+    "selected_plural": "{{count}} images selected — click to change",
+    "processing": "Processing {{processed}} of {{total}} images...",
+    "annotateButton": "Annotate Images",
+    "downloadButton": "Download",
+    "downloadZipButton": "Download All (ZIP)",
+    "loadingPlaceName": "Fetching location name..."
+  },
+  "features": {
+    "heading": "How it works",
+    "step1": {
+      "title": "Upload your image",
+      "desc": "Drag and drop or click to upload. Your images never leave your device."
+    },
+    "step2": {
+      "title": "Automatic EXIF extraction",
+      "desc": "GPS coordinates, timestamp, and location are extracted from the image metadata."
+    },
+    "step3": {
+      "title": "Preview & download",
+      "desc": "View the annotated image and download when ready."
+    }
+  },
+  "beforeAfter": {
+    "heading": "Before & After",
+    "original": "Original",
+    "annotated": "Annotated"
+  },
+  "pricing": {
+    "heading": "Simple, transparent pricing",
+    "subheading": "One plan, unlimited batch processing. No hidden fees, no surprises.",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "monthlyPrice": "$7.99",
+    "annualPrice": "$6.99",
+    "saveMessage": "Save $12 per year",
+    "features": {
+      "single": "Unlimited single image processing",
+      "batch": "Batch processing (up to 50 images)",
+      "prefix": "Custom filename prefixes",
+      "client": "100% client-side processing",
+      "cancel": "Cancel anytime"
+    },
+    "subscribeButton": "Subscribe Now",
+    "redirecting": "Redirecting...",
+    "secured": "Secured by Stripe. Cancel anytime."
+  },
+  "faq": {
+    "heading": "Frequently asked questions",
+    "q1": {
+      "question": "Is my data safe?",
+      "answer": "Absolutely. All image processing happens entirely in your browser. Your images are never uploaded to any server."
+    },
+    "q2": {
+      "question": "What's included in batch processing?",
+      "answer": "With a subscription, you can process up to 50 images at once. Images are packaged into a single ZIP file for easy download."
+    },
+    "q3": {
+      "question": "Can I cancel anytime?",
+      "answer": "Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period."
+    }
+  },
+  "login": {
+    "signIn": "Welcome back",
+    "signUp": "Create an account",
+    "signInSub": "Sign in to your account",
+    "signUpSub": "Sign up to access batch processing",
+    "email": "Email",
+    "password": "Password",
+    "submitSignIn": "Sign In",
+    "submitSignUp": "Create Account",
+    "alreadyHave": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "pleaseWait": "Please wait..."
+  },
+  "dashboard": {
+    "heading": "Dashboard",
+    "batchHeading": "Batch Upload",
+    "batchDesc": "Process up to 50 images at once. Your images are processed entirely in your browser.",
+    "prefixLabel": "Filename prefix (optional)",
+    "prefixPlaceholder": "e.g., vacation_",
+    "prefixHint": "Leave empty for timestamp naming (20260511_1.jpg)",
+    "proMember": "Pro Member",
+    "signOut": "Sign out",
+    "usageTips": "Usage Tips",
+    "tip1": "Images are processed sequentially to ensure consistent serial numbers",
+    "tip2": "Serial numbers reset each day and are formatted as 1, 2, 3...",
+    "tip3": "GPS coordinates and timestamps are extracted from EXIF data automatically"
+  },
+  "desktopApp": {
+    "heading": "Desktop App",
+    "subheading": "Coming Soon",
+    "description": "Experience the ultimate performance with our native desktop application. Ultra-lightweight, 100% local processing.",
+    "notifyMe": "Notify me when available"
+  },
+  "errors": {
+    "imageTooLarge": "Warning: Image exceeds recommended size (50MB). Processing may be slow.",
+    "noExif": "No EXIF data found in this image",
+    "authError": "Invalid email or password",
+    "emailRequired": "Please fill in all fields",
+    "passwordShort": "Password must be at least 6 characters",
+    "accountExists": "An account with this email already exists"
+  },
+  "privacy": {
+    "message": "🔒 Your images are processed entirely in your browser. They never leave your device."
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  }
+}

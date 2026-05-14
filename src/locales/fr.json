@@ -1,0 +1,130 @@
+{
+  "title": "GeoStamp - Outil de géotraitement d'images",
+  "tagline": "Annoter des images avec des coordonnées géographiques, des noms de lieux et des horodatages",
+  "nav": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "login": "Connexion",
+    "dashboard": "Tableau de bord",
+    "getStarted": "Commencer"
+  },
+  "hero": {
+    "heading": "Annoter des images avec des coordonnées géographiques",
+    "subheading": "Outil professionnel de géotraitement, entièrement dans votre navigateur. Aucun téléchargement, aucun serveur, complètement privé.",
+    "uploadButton": "Télécharger une image",
+    "learnMore": "En savoir plus"
+  },
+  "upload": {
+    "dropZone": "Glissez vos images ici",
+    "clickBrowse": "ou cliquez pour parcourir",
+    "selected": "{{count}} image sélectionnée — cliquez pour modifier",
+    "selected_plural": "{{count}} images sélectionnées — cliquez pour modifier",
+    "processing": "Traitement de {{processed}} sur {{total}} images...",
+    "annotateButton": "Annoter les images",
+    "downloadButton": "Télécharger",
+    "downloadZipButton": "Télécharger tout (ZIP)",
+    "loadingPlaceName": "Recherche du nom du lieu..."
+  },
+  "features": {
+    "heading": "Comment ça marche",
+    "step1": {
+      "title": "Téléchargez votre image",
+      "desc": "Glissez-déposez ou cliquez pour télécharger. Vos images ne quittent jamais votre appareil."
+    },
+    "step2": {
+      "title": "Extraction automatique EXIF",
+      "desc": "Les coordonnées GPS, l'horodatage et l'emplacement sont extraits des métadonnées de l'image."
+    },
+    "step3": {
+      "title": "Prévisualiser et télécharger",
+      "desc": "Voir l'image annotée et télécharger quand vous êtes prêt."
+    }
+  },
+  "beforeAfter": {
+    "heading": "Avant / Après",
+    "original": "Original",
+    "annotated": "Annoté"
+  },
+  "pricing": {
+    "heading": "Tarifs simples et transparents",
+    "subheading": "Un seul plan, traitement batch illimité. Aucun frais caché, aucune surprise.",
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "monthlyPrice": "$7.99",
+    "annualPrice": "$6.99",
+    "saveMessage": "Économisez $12 par an",
+    "features": {
+      "single": "Traitement illimité d'images individuelles",
+      "batch": "Traitement batch (jusqu'à 50 images)",
+      "prefix": "Préfixes de noms de fichiers personnalisés",
+      "client": "100% traitement côté client",
+      "cancel": "Annulation à tout moment"
+    },
+    "subscribeButton": "S'abonner maintenant",
+    "redirecting": "Redirection...",
+    "secured": "Sécurisé par Stripe. Annulation à tout moment."
+  },
+  "faq": {
+    "heading": "Questions fréquentes",
+    "q1": {
+      "question": "Mes données sont-elles sécurisées ?",
+      "answer": "Absolument. Tous les traitements d'images se font entièrement dans votre navigateur. Vos images ne sont jamais téléchargées sur un serveur."
+    },
+    "q2": {
+      "question": "Qu'est-ce qui est inclus dans le traitement batch ?",
+      "answer": "Avec un abonnement, vous pouvez traiter jusqu'à 50 images à la fois. Les images sont regroupées dans un fichier ZIP pour un téléchargement facile."
+    },
+    "q3": {
+      "question": "Puis-je annuler à tout moment ?",
+      "answer": "Oui, vous pouvez annuler votre abonnement à tout moment. Vous garderez accès jusqu'à la fin de votre période de facturation."
+    }
+  },
+  "login": {
+    "signIn": "Bienvenue",
+    "signUp": "Créer un compte",
+    "signInSub": "Connectez-vous à votre compte",
+    "signUpSub": "Inscrivez-vous pour accéder au traitement batch",
+    "email": "Email",
+    "password": "Mot de passe",
+    "submitSignIn": "Se connecter",
+    "submitSignUp": "Créer un compte",
+    "alreadyHave": "Déjà un compte ?",
+    "noAccount": "Pas encore de compte ?",
+    "pleaseWait": "Veuillez patienter..."
+  },
+  "dashboard": {
+    "heading": "Tableau de bord",
+    "batchHeading": "Téléchargement batch",
+    "batchDesc": "Traitez jusqu'à 50 images à la fois. Vos images sont traitées entièrement dans votre navigateur.",
+    "prefixLabel": "Préfixe du nom de fichier (optionnel)",
+    "prefixPlaceholder": "ex: vacances_",
+    "prefixHint": "Laissez vide pour un nommage par horodatage (20260511_1.jpg)",
+    "proMember": "Membre Pro",
+    "signOut": "Déconnexion",
+    "usageTips": "Conseils d'utilisation",
+    "tip1": "Les images sont traitées séquentiellement pour garantir des numéros de série cohérents",
+    "tip2": "Les numéros de série se réinitialisent chaque jour et sont formatés comme 1, 2, 3...",
+    "tip3": "Les coordonnées GPS et les horodatages sont extraits automatiquement des données EXIF"
+  },
+  "desktopApp": {
+    "heading": "Application Desktop",
+    "subheading": "Bientôt disponible",
+    "description": "Profitez de performances optimales avec notre application native desktop. Ultra-légère, 100% traitement local.",
+    "notifyMe": "Prévenez-moi quand c'est prêt"
+  },
+  "errors": {
+    "imageTooLarge": "Avertissement : L'image dépasse la taille recommandée (50MB). Le traitement peut être lent.",
+    "noExif": "Aucune donnée EXIF trouvée dans cette image",
+    "authError": "Email ou mot de passe invalide",
+    "emailRequired": "Veuillez remplir tous les champs",
+    "passwordShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "accountExists": "Un compte existe déjà avec cet email"
+  },
+  "privacy": {
+    "message": "🔒 Vos images sont traitées entièrement dans votre navigateur. Elles ne quittent jamais votre appareil."
+  },
+  "footer": {
+    "rights": "Tous droits réservés."
+  }
+}
