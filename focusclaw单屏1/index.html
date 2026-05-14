@@ -1233,7 +1233,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       isSubscriber = localStorage.getItem('isSubscriber') === 'true';
-      debugLog(`Subscriber status: ${isSubscriber}`);
       
       document.getElementById('lang-btn').addEventListener('click', toggleLangDropdown);
       document.getElementById('toggle-debug').addEventListener('click', toggleDebugPanel);
