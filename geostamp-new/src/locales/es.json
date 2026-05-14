@@ -1,0 +1,262 @@
+<<<<<<< HEAD
+{
+  "title": "GeoStamp - Herramienta de geotagging de imágenes",
+  "tagline": "Anotar imágenes con coordenadas geográficas, nombres de ubicación y marcas de tiempo",
+  "nav": {
+    "home": "Inicio",
+    "features": "Características",
+    "pricing": "Precios",
+    "login": "Iniciar sesión",
+    "dashboard": "Panel",
+    "getStarted": "Comenzar"
+  },
+  "hero": {
+    "heading": "Anotar imágenes con coordenadas geográficas",
+    "subheading": "Herramienta profesional de geotagging, completamente en tu navegador. Sin subidas, sin servidores, completamente privada.",
+    "uploadButton": "Subir imagen",
+    "learnMore": "Más información"
+  },
+  "upload": {
+    "dropZone": "Arrastra tus imágenes aquí",
+    "clickBrowse": "o haz clic para explorar",
+    "selected": "{{count}} imagen seleccionada — haz clic para cambiar",
+    "selected_plural": "{{count}} imágenes seleccionadas — haz clic para cambiar",
+    "processing": "Procesando {{processed}} de {{total}} imágenes...",
+    "annotateButton": "Anotar imágenes",
+    "downloadButton": "Descargar",
+    "downloadZipButton": "Descargar todo (ZIP)",
+    "loadingPlaceName": "Buscando nombre de ubicación..."
+  },
+  "features": {
+    "heading": "Cómo funciona",
+    "step1": {
+      "title": "Sube tu imagen",
+      "desc": "Arrastra y suelta o haz clic para subir. Tus imágenes nunca dejan tu dispositivo."
+    },
+    "step2": {
+      "title": "Extracción automática EXIF",
+      "desc": "Las coordenadas GPS, marca de tiempo y ubicación se extraen de los metadatos de la imagen."
+    },
+    "step3": {
+      "title": "Previsualizar y descargar",
+      "desc": "Ver la imagen anotada y descargar cuando estés listo."
+    }
+  },
+  "beforeAfter": {
+    "heading": "Antes y Después",
+    "original": "Original",
+    "annotated": "Anotada"
+  },
+  "pricing": {
+    "heading": "Precios simples y transparentes",
+    "subheading": "Un plan, procesamiento por lotes ilimitado. Sin cargos ocultos, sin sorpresas.",
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "monthlyPrice": "$7.99",
+    "annualPrice": "$6.99",
+    "saveMessage": "Ahorra $12 al año",
+    "features": {
+      "single": "Procesamiento ilimitado de imágenes individuales",
+      "batch": "Procesamiento por lotes (hasta 50 imágenes)",
+      "prefix": "Prefijos personalizados de nombres de archivo",
+      "client": "100% procesamiento del lado del cliente",
+      "cancel": "Cancelar en cualquier momento"
+    },
+    "subscribeButton": "Suscribirse ahora",
+    "redirecting": "Redirigiendo...",
+    "secured": "Protegido por Stripe. Cancelar en cualquier momento."
+  },
+  "faq": {
+    "heading": "Preguntas frecuentes",
+    "q1": {
+      "question": "¿Es seguro mi dato?",
+      "answer": "Absolutamente. Todo el procesamiento de imágenes se realiza completamente en tu navegador. Tus imágenes nunca se suben a ningún servidor."
+    },
+    "q2": {
+      "question": "¿Qué incluye el procesamiento por lotes?",
+      "answer": "Con una suscripción, puedes procesar hasta 50 imágenes a la vez. Las imágenes se empaquetan en un archivo ZIP para una descarga fácil."
+    },
+    "q3": {
+      "question": "¿Puedo cancelar en cualquier momento?",
+      "answer": "Sí, puedes cancelar tu suscripción en cualquier momento. Seguirás teniendo acceso hasta el final de tu período de facturación."
+    }
+  },
+  "login": {
+    "signIn": "Bienvenido",
+    "signUp": "Crear cuenta",
+    "signInSub": "Inicia sesión en tu cuenta",
+    "signUpSub": "Regístrate para acceder al procesamiento por lotes",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submitSignIn": "Iniciar sesión",
+    "submitSignUp": "Crear cuenta",
+    "alreadyHave": "¿Ya tienes una cuenta?",
+    "noAccount": "¿No tienes una cuenta?",
+    "pleaseWait": "Espere..."
+  },
+  "dashboard": {
+    "heading": "Panel",
+    "batchHeading": "Subida por lotes",
+    "batchDesc": "Procesa hasta 50 imágenes a la vez. Tus imágenes se procesan completamente en tu navegador.",
+    "prefixLabel": "Prefijo de nombre de archivo (opcional)",
+    "prefixPlaceholder": "ej: vacaciones_",
+    "prefixHint": "Deja vacío para nombres con marca de tiempo (20260511_1.jpg)",
+    "proMember": "Miembro Pro",
+    "signOut": "Cerrar sesión",
+    "usageTips": "Consejos de uso",
+    "tip1": "Las imágenes se procesan secuencialmente para garantizar números de serie coherentes",
+    "tip2": "Los números de serie se restablecen cada día y tienen formato 1, 2, 3...",
+    "tip3": "Las coordenadas GPS y las marcas de tiempo se extraen automáticamente de los datos EXIF"
+  },
+  "desktopApp": {
+    "heading": "Aplicación de escritorio",
+    "subheading": "Próximamente",
+    "description": "Experimenta el rendimiento máximo con nuestra aplicación de escritorio nativa. Ultra ligera, 100% procesamiento local.",
+    "notifyMe": "Notifícame cuando esté disponible"
+  },
+  "errors": {
+    "imageTooLarge": "Advertencia: La imagen excede el tamaño recomendado (50MB). El procesamiento puede ser lento.",
+    "noExif": "No se encontraron datos EXIF en esta imagen",
+    "authError": "Correo electrónico o contraseña inválidos",
+    "emailRequired": "Por favor, completa todos los campos",
+    "passwordShort": "La contraseña debe tener al menos 6 caracteres",
+    "accountExists": "Ya existe una cuenta con este correo electrónico"
+  },
+  "privacy": {
+    "message": "🔒 Tus imágenes se procesan completamente en tu navegador. Nunca dejan tu dispositivo."
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados."
+  }
+=======
+{
+  "title": "GeoStamp - Herramienta de geotagging de imágenes",
+  "tagline": "Anotar imágenes con coordenadas geográficas, nombres de ubicación y marcas de tiempo",
+  "nav": {
+    "home": "Inicio",
+    "features": "Características",
+    "pricing": "Precios",
+    "login": "Iniciar sesión",
+    "dashboard": "Panel",
+    "getStarted": "Comenzar"
+  },
+  "hero": {
+    "heading": "Anotar imágenes con coordenadas geográficas",
+    "subheading": "Herramienta profesional de geotagging, completamente en tu navegador. Sin subidas, sin servidores, completamente privada.",
+    "uploadButton": "Subir imagen",
+    "learnMore": "Más información"
+  },
+  "upload": {
+    "dropZone": "Arrastra tus imágenes aquí",
+    "clickBrowse": "o haz clic para explorar",
+    "selected": "{{count}} imagen seleccionada — haz clic para cambiar",
+    "selected_plural": "{{count}} imágenes seleccionadas — haz clic para cambiar",
+    "processing": "Procesando {{processed}} de {{total}} imágenes...",
+    "annotateButton": "Anotar imágenes",
+    "downloadButton": "Descargar",
+    "downloadZipButton": "Descargar todo (ZIP)",
+    "loadingPlaceName": "Buscando nombre de ubicación..."
+  },
+  "features": {
+    "heading": "Cómo funciona",
+    "step1": {
+      "title": "Sube tu imagen",
+      "desc": "Arrastra y suelta o haz clic para subir. Tus imágenes nunca dejan tu dispositivo."
+    },
+    "step2": {
+      "title": "Extracción automática EXIF",
+      "desc": "Las coordenadas GPS, marca de tiempo y ubicación se extraen de los metadatos de la imagen."
+    },
+    "step3": {
+      "title": "Previsualizar y descargar",
+      "desc": "Ver la imagen anotada y descargar cuando estés listo."
+    }
+  },
+  "beforeAfter": {
+    "heading": "Antes y Después",
+    "original": "Original",
+    "annotated": "Anotada"
+  },
+  "pricing": {
+    "heading": "Precios simples y transparentes",
+    "subheading": "Un plan, procesamiento por lotes ilimitado. Sin cargos ocultos, sin sorpresas.",
+    "monthly": "Mensual",
+    "annual": "Anual",
+    "monthlyPrice": "$7.99",
+    "annualPrice": "$6.99",
+    "saveMessage": "Ahorra $12 al año",
+    "features": {
+      "single": "Procesamiento ilimitado de imágenes individuales",
+      "batch": "Procesamiento por lotes (hasta 50 imágenes)",
+      "prefix": "Prefijos personalizados de nombres de archivo",
+      "client": "100% procesamiento del lado del cliente",
+      "cancel": "Cancelar en cualquier momento"
+    },
+    "subscribeButton": "Suscribirse ahora",
+    "redirecting": "Redirigiendo...",
+    "secured": "Protegido por Stripe. Cancelar en cualquier momento."
+  },
+  "faq": {
+    "heading": "Preguntas frecuentes",
+    "q1": {
+      "question": "¿Es seguro mi dato?",
+      "answer": "Absolutamente. Todo el procesamiento de imágenes se realiza completamente en tu navegador. Tus imágenes nunca se suben a ningún servidor."
+    },
+    "q2": {
+      "question": "¿Qué incluye el procesamiento por lotes?",
+      "answer": "Con una suscripción, puedes procesar hasta 50 imágenes a la vez. Las imágenes se empaquetan en un archivo ZIP para una descarga fácil."
+    },
+    "q3": {
+      "question": "¿Puedo cancelar en cualquier momento?",
+      "answer": "Sí, puedes cancelar tu suscripción en cualquier momento. Seguirás teniendo acceso hasta el final de tu período de facturación."
+    }
+  },
+  "login": {
+    "signIn": "Bienvenido",
+    "signUp": "Crear cuenta",
+    "signInSub": "Inicia sesión en tu cuenta",
+    "signUpSub": "Regístrate para acceder al procesamiento por lotes",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submitSignIn": "Iniciar sesión",
+    "submitSignUp": "Crear cuenta",
+    "alreadyHave": "¿Ya tienes una cuenta?",
+    "noAccount": "¿No tienes una cuenta?",
+    "pleaseWait": "Espere..."
+  },
+  "dashboard": {
+    "heading": "Panel",
+    "batchHeading": "Subida por lotes",
+    "batchDesc": "Procesa hasta 50 imágenes a la vez. Tus imágenes se procesan completamente en tu navegador.",
+    "prefixLabel": "Prefijo de nombre de archivo (opcional)",
+    "prefixPlaceholder": "ej: vacaciones_",
+    "prefixHint": "Deja vacío para nombres con marca de tiempo (20260511_1.jpg)",
+    "proMember": "Miembro Pro",
+    "signOut": "Cerrar sesión",
+    "usageTips": "Consejos de uso",
+    "tip1": "Las imágenes se procesan secuencialmente para garantizar números de serie coherentes",
+    "tip2": "Los números de serie se restablecen cada día y tienen formato 1, 2, 3...",
+    "tip3": "Las coordenadas GPS y las marcas de tiempo se extraen automáticamente de los datos EXIF"
+  },
+  "desktopApp": {
+    "heading": "Aplicación de escritorio",
+    "subheading": "Próximamente",
+    "description": "Experimenta el rendimiento máximo con nuestra aplicación de escritorio nativa. Ultra ligera, 100% procesamiento local.",
+    "notifyMe": "Notifícame cuando esté disponible"
+  },
+  "errors": {
+    "imageTooLarge": "Advertencia: La imagen excede el tamaño recomendado (50MB). El procesamiento puede ser lento.",
+    "noExif": "No se encontraron datos EXIF en esta imagen",
+    "authError": "Correo electrónico o contraseña inválidos",
+    "emailRequired": "Por favor, completa todos los campos",
+    "passwordShort": "La contraseña debe tener al menos 6 caracteres",
+    "accountExists": "Ya existe una cuenta con este correo electrónico"
+  },
+  "privacy": {
+    "message": "🔒 Tus imágenes se procesan completamente en tu navegador. Nunca dejan tu dispositivo."
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados."
+  }
+>>>>>>> e4eba883a04c08465efdd112d57d260134d78910
+}
