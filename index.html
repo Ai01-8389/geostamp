@@ -1,704 +1,403 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoStamp - Image Geotagging</title>
+  <title>GeoStamp - 图片地理位置标注工具</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); min-height: 100vh; color: #e4e4e7; }
-    #app { min-height: 100vh; display: flex; flex-direction: column; }
-    
+    #app { min-height: 100vh; }
+
+    .auth-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+    .auth-overlay.show { display: flex; }
+    .auth-container { background: #1f1f2e; border-radius: 20px; padding: 32px; width: 90%; max-width: 420px; border: 1px solid rgba(255,255,255,0.1); }
+    .auth-header { text-align: center; margin-bottom: 28px; }
+    .auth-header h2 { font-size: 24px; font-weight: 600; color: #f4f4f5; }
+    .auth-header p { font-size: 14px; color: #71717a; margin-top: 8px; }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-form input { padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e4e4e7; font-size: 14px; }
+    .auth-form input:focus { outline: none; border-color: #8b5cf6; }
+    .auth-form button { padding: 14px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .auth-switch { text-align: center; margin-top: 20px; font-size: 13px; color: #71717a; }
+    .auth-switch button { background: none; border: none; color: #a78bfa; cursor: pointer; text-decoration: underline; }
+    .auth-error { display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; font-size: 13px; text-align: center; margin-bottom: 16px; }
+    .auth-error.show { display: block; }
+
     header { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); }
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo svg { width: 32px; height: 32px; }
     .logo span { font-weight: 600; font-size: 17px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
     .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { text-decoration: none; color: #a1a1aa; font-size: 13px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a { text-decoration: none; color: #a1a1aa; font-size: 13px; font-weight: 500; }
     .nav-links a:hover { color: #e4e4e7; }
     .nav-links .btn { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; }
-    
-    .lang-selector { position: relative; }
-    .lang-selector .lang-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-size: 13px; color: #e4e4e7; }
-    .lang-selector .lang-btn:hover { background: rgba(255,255,255,0.1); }
-    .lang-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: #1f1f2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; min-width: 140px; z-index: 100; }
-    .lang-dropdown.show { display: block; }
-    .lang-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; background: none; border: none; color: #e4e4e7; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; }
-    .lang-option:hover { background: rgba(255,255,255,0.08); }
-    
-    .main-content { 
-      flex: 1; 
-      display: grid; 
-      grid-template-columns: 1fr 1fr 2fr; 
-      grid-template-rows: 1.5fr 0.8fr 0.7fr; 
-      gap: 16px; 
-      padding: 20px; 
-      max-width: 1400px; 
-      margin: 0 auto; 
-      width: 100%; 
-      height: calc(100vh - 80px);
-      box-sizing: border-box;
-    }
-    .grid-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
-    .grid-item.comparison { grid-column: 1; grid-row: 1 / 3; }
-    .grid-item.upload { grid-column: 2; grid-row: 1; }
-    .grid-item.results { grid-column: 3; grid-row: 1 / 4; }
-    .grid-item.instructions { grid-column: 1; grid-row: 3; }
-    .grid-item.desktop { grid-column: 2; grid-row: 2; }
-    .grid-item.pricing { grid-column: 2; grid-row: 3; }
-    
-    .panel-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #f4f4f5; }
-    
-    .upload-area { background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; margin-top: 16px; }
-    .upload-area:hover, .upload-area.active { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
-    .upload-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-    .upload-icon svg { width: 24px; height: 24px; color: #a1a1aa; }
-    .upload-area h3 { font-size: 14px; font-weight: 500; color: #e4e4e7; margin-bottom: 4px; }
-    .upload-area p { font-size: 12px; color: #71717a; }
-    
+
+    .user-menu { position: relative; }
+    .user-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; cursor: pointer; color: #a78bfa; font-size: 13px; }
+    .user-btn .badge { background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+    .user-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: #1f1f2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; min-width: 160px; z-index: 100; }
+    .user-dropdown.show { display: block; }
+    .user-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: none; color: #e4e4e7; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; }
+    .user-option:hover { background: rgba(255,255,255,0.08); }
+
+    .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .upload-section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; }
+    .upload-area { background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; margin-top: 16px; }
+    .upload-area:hover { border-color: #8b5cf6; }
+    .upload-icon svg { width: 48px; height: 48px; color: #a1a1aa; }
     #file-input { display: none; }
-    
-    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 16px; }
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
     .preview-item { aspect-ratio: 4/3; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; position: relative; }
     .preview-item img { width: 100%; height: 100%; object-fit: cover; }
     .preview-item span { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; font-size: 10px; overflow: hidden; }
-    
-    .action-buttons { display: flex; gap: 8px; margin-top: 12px; }
-    .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+
+    .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
     .btn-primary { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
     .btn-secondary { background: rgba(255,255,255,0.08); color: #e4e4e7; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
-    .steps { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-    .step { display: flex; gap: 10px; }
-    .step-number { width: 22px; height: 22px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
-    .step-title { font-size: 13px; font-weight: 500; color: #e4e4e7; margin-bottom: 2px; }
-    .step-desc { font-size: 11px; color: #71717a; }
-    
-    .comparison-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-    .comparison-item { aspect-ratio: 16/9; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative; }
-    .comparison-item .label { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-    
-    .results-section { display: flex; flex-direction: column; }
-    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; overflow-y: auto; }
+
+    .action-buttons { display: flex; gap: 12px; margin-top: 16px; }
+    .upload-limit { color: #fbbf24; font-size: 12px; margin-top: 8px; }
+
+    .results-section { margin-top: 24px; }
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
     .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
     .result-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
-    .result-card .info { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); }
-    .result-card .name { font-size: 12px; color: #a1a1aa; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-card .info { padding: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); }
+    .result-card .name { font-size: 12px; color: #a1a1aa; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .download-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
     .download-btn svg { width: 16px; height: 16px; color: #e4e4e7; }
-    
-    .pricing-section { text-align: center; }
-    .pricing-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #f4f4f5; }
-    .price { font-size: 28px; font-weight: 600; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .period { font-size: 12px; color: #71717a; margin-top: 4px; }
-    .pricing-section ul { margin-top: 16px; padding-left: 20px; text-align: left; }
-    .pricing-section li { padding: 4px 0; font-size: 12px; color: #a1a1aa; }
-    .pricing-section button { width: 100%; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; margin-top: 12px; }
-    
-    .desktop-app { text-align: center; }
-    .desktop-app h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #f4f4f5; }
-    .desktop-app .subtitle { font-size: 13px; color: #a78bfa; font-weight: 500; margin-top: 8px; }
-    .desktop-app p { font-size: 12px; color: #71717a; margin-top: 8px; }
-    .desktop-app .badge { display: inline-block; background: rgba(139, 92, 246, 0.15); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-top: 12px; }
-    
-    .privacy-badge { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 6px; padding: 8px 10px; font-size: 11px; color: #86efac; display: flex; align-items: center; gap: 6px; margin-top: 10px; }
-    
-    .naming-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-    .naming-modal-overlay.show { display: flex; }
-    .naming-modal { background: #1f1f2e; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
-    .naming-modal h3 { margin: 0 0 20px 0; font-size: 18px; color: #f4f4f5; font-weight: 600; }
-    .naming-modal .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-    .naming-modal .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
-    .naming-modal .option.selected { background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.5); }
-    .naming-modal .option .label { font-size: 14px; color: #e4e4e7; }
-    .naming-modal .option .desc { font-size: 12px; color: #71717a; }
-    .naming-modal .custom-input { margin-top: 8px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e4e4e7; font-size: 14px; width: 100%; box-sizing: border-box; display: none; }
-    .naming-modal .custom-input.show { display: block; }
-    .naming-modal .buttons { display: flex; gap: 12px; }
-    .naming-modal .buttons button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
-    .naming-modal .btn-cancel { background: rgba(255,255,255,0.08); color: #a1a1aa; }
-    .naming-modal .btn-confirm { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
-    
-    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; }
+
+    .pricing-section { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .pricing-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; text-align: center; }
+    .pricing-card.featured { border-color: rgba(139, 92, 246, 0.5); background: rgba(139, 92, 246, 0.08); }
+    .pricing-card h3 { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 8px; }
+    .pricing-card .price { font-size: 36px; font-weight: 600; color: #a78bfa; }
+    .pricing-card .period { font-size: 14px; color: #71717a; margin-bottom: 20px; }
+    .pricing-card ul { list-style: none; padding: 0; margin-bottom: 20px; }
+    .pricing-card li { padding: 8px 0; font-size: 14px; color: #a1a1aa; }
+    .pricing-card button { width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .pricing-card.featured button { background: white; color: #8b5cf6; }
+
+    .toast { display: none; position: fixed; bottom: 24px; right: 24px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 14px 18px; align-items: center; gap: 10px; }
+    .toast.show { display: flex; }
+    .toast.error { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+    .toast.info { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); }
+    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
     .loading-overlay.show { display: flex; }
     .loading-content { text-align: center; }
-    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    .loading-text { color: #e4e4e7; font-size: 14px; }
+    .loading-status { color: #a1a1aa; font-size: 12px; margin-top: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .progress-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin: 0 auto; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #06b6d4); width: 0%; transition: width 0.3s; }
-    
-    .toast { display: none; position: fixed; bottom: 24px; right: 24px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 14px 18px; align-items: center; gap: 10px; }
-    .toast.show { display: flex; animation: slideIn 0.3s ease; }
-    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
-    .debug-panel { position: fixed; bottom: 80px; left: 24px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; max-width: 400px; max-height: 300px; overflow-y: auto; z-index: 999; font-family: monospace; font-size: 11px; color: #86efac; display: none; }
-    .debug-panel.show { display: block; }
-    .debug-panel h4 { color: #f4f4f5; margin-bottom: 8px; font-size: 12px; }
-    .debug-panel .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .debug-panel .log-entry:last-child { border-bottom: none; }
-    
-    @media (max-width: 900px) { 
-      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .grid-item.comparison, .grid-item.upload, .grid-item.results,
-      .grid-item.instructions, .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
-    }
+
+    .rename-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+    .rename-modal-overlay.show { display: flex; }
+    .rename-modal { background: #1f1f2e; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+    .rename-modal h3 { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 16px; }
+    .rename-modal input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e4e4e7; font-size: 14px; margin-bottom: 16px; }
+    .rename-modal input:focus { outline: none; border-color: #8b5cf6; }
+    .rename-modal .modal-actions { display: flex; gap: 12px; }
+    .rename-modal .modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+    .rename-modal .modal-actions button:first-child { background: rgba(255,255,255,0.08); color: #e4e4e7; }
+    .rename-modal .modal-actions button:last-child { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
+
+    .debug-panel { margin-top: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; font-size: 12px; font-family: monospace; max-height: 300px; overflow-y: auto; }
+    .debug-panel.hidden { display: none; }
+    .debug-log { color: #a1a1aa; margin: 4px 0; }
+    .debug-log.error { color: #f87171; }
+    .debug-log.success { color: #34d399; }
+    .debug-log.info { color: #60a5fa; }
   </style>
 </head>
 <body>
   <div id="app">
+    <div id="auth-overlay" class="auth-overlay">
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>欢迎回来</h2>
+          <p>登录您的账户</p>
+        </div>
+        <div id="auth-error" class="auth-error">错误信息</div>
+        <div class="auth-form">
+          <input type="email" id="auth-email" placeholder="邮箱地址" required>
+          <input type="password" id="auth-password" placeholder="密码" required>
+          <button id="auth-submit">登录</button>
+        </div>
+        <div class="auth-switch">
+          还没有账户？ <button id="auth-switch">注册</button>
+        </div>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <p style="font-size: 11px; color: #71717a; text-align: center;">
+            测试账户：test@example.com / password123<br>
+            订阅账户：pro@example.com / password123
+          </p>
+        </div>
+      </div>
+    </div>
+
     <header>
       <div class="logo">
         <svg viewBox="0 0 32 32" fill="none">
-          <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
-          <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/><path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#fff"/>
+          <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
+          <rect width="32" height="32" rx="8" fill="url(#lg)"/><path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#fff"/>
         </svg>
         <span>GeoStamp</span>
       </div>
       <div class="nav-links">
-        <a href="#features" id="nav-features">Features</a>
-        <a href="#pricing" id="nav-pricing">Pricing</a>
-        <a href="#desktop" id="nav-desktop">Desktop</a>
-        <a href="#" class="btn" id="nav-started">Get Started</a>
-        <div class="lang-selector">
-          <button class="lang-btn" id="lang-btn">
-            <span id="lang-flag">🇺🇸</span>
-            <span id="lang-code">EN</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <a href="#" id="debug-toggle">调试</a>
+        <a href="#features">功能</a>
+        <a href="#pricing">价格</a>
+        <div class="user-menu" id="user-menu" style="display: none;">
+          <button class="user-btn" id="user-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span id="user-name">用户</span>
+            <span class="badge" id="user-status" style="display:none">Pro</span>
           </button>
-          <div class="lang-dropdown" id="lang-dropdown">
-            <button class="lang-option" data-lang="en">🇺🇸 English</button>
-            <button class="lang-option" data-lang="zh">🇹🇼 繁體中文</button>
-            <button class="lang-option" data-lang="fr">🇫🇷 Français</button>
-            <button class="lang-option" data-lang="es">🇪🇸 Español</button>
-            <button class="lang-option" data-lang="ru">🇷🇺 Русский</button>
-            <button class="lang-option" data-lang="ar">🇸🇦 العربية</button>
+          <div class="user-dropdown" id="user-dropdown">
+            <button class="user-option" id="user-profile">个人资料</button>
+            <button class="user-option" id="user-subscribe">订阅管理</button>
+            <button class="user-option" id="user-logout">退出登录</button>
           </div>
         </div>
+        <button id="login-btn" class="btn">登录</button>
       </div>
     </header>
 
     <div class="main-content">
-      <div class="grid-item comparison">
-        <h3 id="comparison-title">Before & After</h3>
-        <div class="comparison-grid">
-          <div class="comparison-item">
-            <div class="label" id="comparison-original">Original</div>
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3C/svg%3E" alt="Before" style="width:100%;height:100%;object-fit:cover;">
-          </div>
-          <div class="comparison-item">
-            <div class="label" id="comparison-annotated">Annotated</div>
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3Crect x='0' y='185' width='400' height='40' fill='rgba(0,0,0,0.7)'/%3E%3Ctext x='16' y='210' fill='white' font-size='12' font-family='Arial'%3EShanghai Bund | 2024-01-15 10:30 | #1%3C/text%3E%3C/svg%3E" alt="After" style="width:100%;height:100%;object-fit:cover;">
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-item upload">
-        <h3 class="panel-title" id="panel-upload">Upload Images</h3>
+      <div class="upload-section">
+        <h2 style="font-size: 18px; color: #f4f4f5; margin-bottom: 8px;">上传图片</h2>
+        <p style="color: #71717a; font-size: 14px;">拖放图片到下方区域或点击选择文件</p>
+        
         <input type="file" id="file-input" accept="image/*" multiple>
         <div class="upload-area" id="upload-area">
           <div class="upload-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6L16 6a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
           </div>
-          <h3 id="upload-title">Drop images here</h3>
-          <p id="upload-desc">or click to browse</p>
+          <h3 style="margin-top: 12px; color: #e4e4e7;">拖放图片到这里</h3>
+          <p style="color: #71717a; font-size: 13px; margin-top: 4px;">或点击选择文件</p>
         </div>
+
         <div id="preview-container" class="preview-grid" style="display: none;"></div>
-        <div id="empty-preview" style="text-align: center; padding: 12px 0; color: #71717a; font-size: 12px;"><p id="empty-preview-text">No images selected</p></div>
+        <div id="empty-preview" style="text-align: center; padding: 16px; color: #71717a;">
+          <p>请选择图片</p>
+          <p class="upload-limit" id="upload-limit">免费用户每次最多上传 1 张图片</p>
+        </div>
+
         <div class="action-buttons">
-          <button id="process-btn" class="btn btn-primary" disabled><span id="btn-annotate">Annotate Images</span></button>
-          <button id="download-all-btn" class="btn btn-secondary" disabled><span id="btn-download-all">Download All</span></button>
-        </div>
-        <div class="privacy-badge"><span>🔒</span><span id="privacy-text">Your images are processed locally</span></div>
-        <div style="margin-top: 8px;">
-          <button id="toggle-debug" style="font-size: 10px; padding: 4px 8px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #a78bfa; border-radius: 4px; cursor: pointer;">Toggle Debug</button>
+          <button id="process-btn" class="btn btn-primary" disabled>开始标注</button>
+          <button id="download-all-btn" class="btn btn-secondary" disabled>下载全部</button>
         </div>
       </div>
 
-      <div class="grid-item results" id="results-section">
-        <h3 id="results-title">Annotated Images</h3>
+      <div class="results-section" id="results-section">
+        <h2 style="font-size: 18px; color: #f4f4f5;">已标注图片</h2>
         <div id="results-grid" class="results-grid"></div>
-        <div id="empty-results" style="text-align: center; padding: 40px 0; color: #71717a; font-size: 12px;">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          <p>Process images to see results</p>
+        <div id="empty-results" style="text-align: center; padding: 40px; color: #71717a;">
+          <p>请先处理图片</p>
         </div>
       </div>
 
-      <div class="grid-item instructions">
-        <h3 id="instructions-title">How It Works</h3>
-        <div class="steps">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-content">
-              <div class="step-title" id="step1-title">Upload Images</div>
-              <div class="step-desc" id="step1-desc">Drag or click to upload photos with GPS data</div>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-content">
-              <div class="step-title" id="step2-title">Choose Naming</div>
-              <div class="step-desc" id="step2-desc">Select your preferred file naming convention</div>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-content">
-              <div class="step-title" id="step3-title">Download</div>
-              <div class="step-desc" id="step3-desc">Get your geotagged images with location overlays</div>
-            </div>
-          </div>
-        </div>
+      <div id="debug-panel" class="debug-panel hidden">
+        <h4 style="color: #f4f4f5; margin-bottom: 12px;">调试日志</h4>
+        <div id="debug-logs"></div>
       </div>
 
-      <div class="grid-item desktop">
-        <div class="desktop-app">
-          <h3 id="desktop-title">Desktop App</h3>
-          <div class="subtitle" id="desktop-subtitle">Unlimited Processing</div>
-          <p id="desktop-desc">Process unlimited photos offline with local processing</p>
-          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.Setup.exe" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Windows (.exe)
-            </a>
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.dmg" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              macOS (.dmg)
-            </a>
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/geostamp_1.0.0_amd64.deb" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Linux (.deb)
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-item pricing">
-        <div class="pricing-section">
-          <h3 id="pricing-title">Subscription</h3>
-          <div class="price" id="pricing-price">$7.99</div>
-          <div class="period" id="pricing-period">per month</div>
+      <div id="pricing" class="pricing-section">
+        <div class="pricing-card">
+          <h3>免费版</h3>
+          <div class="price">$0</div>
+          <div class="period">永久免费</div>
           <ul>
-            <li id="pricing-feature1">Unlimited image processing</li>
-            <li id="pricing-feature2">HD quality output</li>
-            <li id="pricing-feature3">Batch processing support</li>
-            <li id="pricing-feature4">Priority support</li>
+            <li>每次最多处理 1 张图片</li>
+            <li>基础图片标注</li>
+            <li>社区支持</li>
           </ul>
-          <button id="pricing-btn">Subscribe Now</button>
+          <button id="free-join">开始使用</button>
         </div>
-      </div>
-    </div>
-
-    <div id="naming-modal-overlay" class="naming-modal-overlay">
-      <div class="naming-modal">
-        <h3 id="naming-title">File Naming</h3>
-        <div class="options">
-          <label class="option selected"><input type="radio" name="naming-rule-modal" value="date" checked><div><div class="label" id="naming-date">Date_Serial</div><div class="desc" id="naming-date-desc">20240115_001.jpg</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="original"><div><div class="label" id="naming-original">Original Filename</div><div class="desc" id="naming-original-desc">Keep original name</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="gps"><div><div class="label" id="naming-gps">GPS Coordinates</div><div class="desc" id="naming-gps-desc">38.93_121.60_001.jpg</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="custom"><div><div class="label" id="naming-custom">Custom Prefix</div><div class="desc" id="naming-custom-desc">Enter custom text</div></div></label>
+        <div class="pricing-card featured">
+          <h3>Pro 专业版</h3>
+          <div class="price">$7.99</div>
+          <div class="period">每月</div>
+          <ul>
+            <li>无限图片处理</li>
+            <li>高清品质输出</li>
+            <li>批次处理支持</li>
+            <li>优先技术支持</li>
+          </ul>
+          <button id="pro-subscribe">立即订阅</button>
         </div>
-        <input type="text" id="custom-prefix-modal" class="custom-input" placeholder="Enter custom prefix">
-        <div class="buttons"><button class="btn-cancel" id="naming-cancel">Cancel</button><button class="btn-confirm" id="naming-confirm">Annotate</button></div>
       </div>
     </div>
 
     <div id="loading-overlay" class="loading-overlay">
-      <div class="loading-content"><div class="loading-spinner"></div><div class="loading-text" id="loading-text">Processing images...</div><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div></div>
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">处理中...</div>
+        <div class="loading-status" id="loading-status"></div>
+      </div>
     </div>
 
-    <div id="toast" class="toast"><span class="icon">✓</span><span class="text" id="toast-text">Processing complete!</span></div>
-    
-    <div id="debug-panel" class="debug-panel">
-      <h4>Debug Log</h4>
-      <div id="debug-log"></div>
+    <div id="toast" class="toast"><span>✓</span><span id="toast-text">操作成功!</span></div>
+
+    <div id="rename-modal" class="rename-modal-overlay">
+      <div class="rename-modal">
+        <h3>重命名图片</h3>
+        <input type="text" id="rename-input" placeholder="输入新文件名（不含扩展名）">
+        <div class="modal-actions">
+          <button id="rename-cancel">取消</button>
+          <button id="rename-confirm">确认</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script>
-    const translations = {
-      en: {
-        'nav-features': 'Features',
-        'nav-pricing': 'Pricing',
-        'nav-desktop': 'Desktop',
-        'nav-started': 'Get Started',
-        'panel-upload': 'Upload Images',
-        'upload-title': 'Drop images here',
-        'upload-desc': 'or click to browse',
-        'empty-preview-text': 'No images selected',
-        'btn-annotate': 'Annotate Images',
-        'btn-download-all': 'Download All',
-        'privacy-text': 'Your images are processed locally',
-        'instructions-title': 'How It Works',
-        'step1-title': 'Upload Images',
-        'step1-desc': 'Drag or click to upload photos with GPS data',
-        'step2-title': 'Choose Naming',
-        'step2-desc': 'Select your preferred file naming convention',
-        'step3-title': 'Download',
-        'step3-desc': 'Get your geotagged images with location overlays',
-        'comparison-title': 'Before & After',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Annotated',
-        'results-title': 'Annotated Images',
-        'pricing-title': 'Subscription',
-        'pricing-price': '$7.99',
-        'pricing-period': 'per month',
-        'pricing-feature1': 'Unlimited image processing',
-        'pricing-feature2': 'HD quality output',
-        'pricing-feature3': 'Batch processing support',
-        'pricing-feature4': 'Priority support',
-        'pricing-btn': 'Subscribe Now',
-        'desktop-title': 'Desktop App',
-        'desktop-subtitle': 'Coming Soon',
-        'desktop-desc': 'Offline processing for faster and more secure workflow',
-        'desktop-badge': 'Stay tuned',
-        'naming-title': 'File Naming',
-        'naming-date': 'Date_Serial',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Original Filename',
-        'naming-original-desc': 'Keep original name',
-        'naming-gps': 'GPS Coordinates',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Custom Prefix',
-        'naming-custom-desc': 'Enter custom text',
-        'naming-cancel': 'Cancel',
-        'naming-confirm': 'Annotate',
-        'loading-text': 'Processing images...',
-        'toast-success': 'Processing complete!'
-      },
-      zh: {
-        'nav-features': '功能',
-        'nav-pricing': '價格',
-        'nav-desktop': '桌面版',
-        'nav-started': '開始使用',
-        'panel-upload': '上傳圖片',
-        'upload-title': '拖曳圖片到這裡',
-        'upload-desc': '或點擊選擇檔案',
-        'empty-preview-text': '請選擇圖片',
-        'btn-annotate': '開始標註',
-        'btn-download-all': '下載全部',
-        'privacy-text': '圖片僅在瀏覽器處理',
-        'instructions-title': '使用方法',
-        'step1-title': '上傳圖片',
-        'step1-desc': '拖曳或點擊上傳包含GPS資訊的照片',
-        'step2-title': '選擇命名',
-        'step2-desc': '選擇您喜歡的檔案命名方式',
-        'step3-title': '下載',
-        'step3-desc': '取得帶地理位置標註的圖片',
-        'comparison-title': '效果對比',
-        'comparison-original': '原圖',
-        'comparison-annotated': '標註後',
-        'results-title': '已標註圖片',
-        'pricing-title': '訂閱服務',
-        'pricing-price': '$7.99',
-        'pricing-period': '每月',
-        'pricing-feature1': '無限圖片處理',
-        'pricing-feature2': '高品質圖片輸出',
-        'pricing-feature3': '批次處理支援',
-        'pricing-feature4': '優先技術支援',
-        'pricing-btn': '立即訂閱',
-        'desktop-title': '桌面應用',
-        'desktop-subtitle': '即將推出',
-        'desktop-desc': '離線處理，更快更安全',
-        'desktop-badge': '敬請期待',
-        'naming-title': '選擇命名規則',
-        'naming-date': '日期_序號',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': '原檔名',
-        'naming-original-desc': '保持原始檔名不變',
-        'naming-gps': 'GPS座標',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': '自訂前綴',
-        'naming-custom-desc': '輸入自訂文字',
-        'naming-cancel': '取消',
-        'naming-confirm': '確認',
-        'loading-text': '正在處理圖片...',
-        'toast-success': '處理完成！'
-      },
-      fr: {
-        'nav-features': 'Fonctionnalités',
-        'nav-pricing': 'Tarifs',
-        'nav-desktop': 'Bureau',
-        'nav-started': 'Commencer',
-        'panel-upload': 'Télécharger des images',
-        'upload-title': 'Déposez les images ici',
-        'upload-desc': 'ou cliquez pour parcourir',
-        'empty-preview-text': 'Aucune image sélectionnée',
-        'btn-annotate': 'Annoter les images',
-        'btn-download-all': 'Tout télécharger',
-        'privacy-text': 'Vos images sont traitées localement',
-        'instructions-title': 'Comment ça marche',
-        'step1-title': 'Télécharger des images',
-        'step1-desc': 'Glissez ou cliquez pour télécharger',
-        'step2-title': 'Choisir le nom',
-        'step2-desc': 'Sélectionnez votre convention',
-        'step3-title': 'Télécharger',
-        'step3-desc': 'Obtenez vos images géotagées',
-        'comparison-title': 'Avant / Après',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Annoté',
-        'results-title': 'Images annotées',
-        'pricing-title': 'Abonnement',
-        'pricing-price': '7,99 $',
-        'pricing-period': 'par mois',
-        'pricing-feature1': 'Traitement illimité',
-        'pricing-feature2': 'Sortie HD',
-        'pricing-feature3': 'Traitement par lots',
-        'pricing-feature4': 'Support prioritaire',
-        'pricing-btn': 'S\'abonner',
-        'desktop-title': 'Application de bureau',
-        'desktop-subtitle': 'Bientôt disponible',
-        'desktop-desc': 'Traitement hors ligne',
-        'desktop-badge': 'À venir',
-        'naming-title': 'Nom de fichier',
-        'naming-date': 'Date_Série',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Nom original',
-        'naming-original-desc': 'Conserver le nom',
-        'naming-gps': 'Coordonnées GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Préfixe personnalisé',
-        'naming-custom-desc': 'Entrez du texte',
-        'naming-cancel': 'Annuler',
-        'naming-confirm': 'Annoter',
-        'loading-text': 'Traitement...',
-        'toast-success': 'Terminé!'
-      },
-      es: {
-        'nav-features': 'Características',
-        'nav-pricing': 'Precios',
-        'nav-desktop': 'Escritorio',
-        'nav-started': 'Empezar',
-        'panel-upload': 'Subir imágenes',
-        'upload-title': 'Arrastra imágenes aquí',
-        'upload-desc': 'o haz clic para buscar',
-        'empty-preview-text': 'No hay imágenes',
-        'btn-annotate': 'Anotar imágenes',
-        'btn-download-all': 'Descargar todo',
-        'privacy-text': 'Procesamiento local',
-        'instructions-title': 'Cómo funciona',
-        'step1-title': 'Subir imágenes',
-        'step1-desc': 'Arrastra o haz clic',
-        'step2-title': 'Elegir nombre',
-        'step2-desc': 'Seleccione su convención',
-        'step3-title': 'Descargar',
-        'step3-desc': 'Obtenga imágenes geotaggeadas',
-        'comparison-title': 'Antes / Después',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Anotado',
-        'results-title': 'Imágenes anotadas',
-        'pricing-title': 'Suscripción',
-        'pricing-price': '$7,99',
-        'pricing-period': 'por mes',
-        'pricing-feature1': 'Procesamiento ilimitado',
-        'pricing-feature2': 'Salida HD',
-        'pricing-feature3': 'Procesamiento por lotes',
-        'pricing-feature4': 'Soporte prioritario',
-        'pricing-btn': 'Suscribirse',
-        'desktop-title': 'Aplicación de escritorio',
-        'desktop-subtitle': 'Próximamente',
-        'desktop-desc': 'Procesamiento sin conexión',
-        'desktop-badge': 'Próximamente',
-        'naming-title': 'Nombre de archivo',
-        'naming-date': 'Fecha_Serie',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Nombre original',
-        'naming-original-desc': 'Mantener nombre',
-        'naming-gps': 'Coordenadas GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Prefijo personalizado',
-        'naming-custom-desc': 'Ingrese texto',
-        'naming-cancel': 'Cancelar',
-        'naming-confirm': 'Anotar',
-        'loading-text': 'Procesando...',
-        'toast-success': '¡Completado!'
-      },
-      ru: {
-        'nav-features': 'Функции',
-        'nav-pricing': 'Цены',
-        'nav-desktop': 'Десктоп',
-        'nav-started': 'Начать',
-        'panel-upload': 'Загрузить изображения',
-        'upload-title': 'Перетащите изображения',
-        'upload-desc': 'или нажмите для выбора',
-        'empty-preview-text': 'Изображения не выбраны',
-        'btn-annotate': 'Аннотировать',
-        'btn-download-all': 'Скачать все',
-        'privacy-text': 'Локальная обработка',
-        'instructions-title': 'Как это работает',
-        'step1-title': 'Загрузить изображения',
-        'step1-desc': 'Перетащите или нажмите',
-        'step2-title': 'Выбрать именование',
-        'step2-desc': 'Выберите схему именования',
-        'step3-title': 'Скачать',
-        'step3-desc': 'Получите геотеггированные изображения',
-        'comparison-title': 'До / После',
-        'comparison-original': 'Оригинал',
-        'comparison-annotated': 'Аннотирован',
-        'results-title': 'Аннотированные изображения',
-        'pricing-title': 'Подписка',
-        'pricing-price': '7,99 $',
-        'pricing-period': 'в месяц',
-        'pricing-feature1': 'Безлимитная обработка',
-        'pricing-feature2': 'Выход HD',
-        'pricing-feature3': 'Пакетная обработка',
-        'pricing-feature4': 'Приоритетная поддержка',
-        'pricing-btn': 'Подписаться',
-        'desktop-title': 'Десктопное приложение',
-        'desktop-subtitle': 'Скоро',
-        'desktop-desc': 'Оффлайн-обработка',
-        'desktop-badge': 'Скоро',
-        'naming-title': 'Именование файла',
-        'naming-date': 'Дата_Номер',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Имя файла',
-        'naming-original-desc': 'Сохранить имя',
-        'naming-gps': 'GPS-координаты',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Пользовательский префикс',
-        'naming-custom-desc': 'Введите текст',
-        'naming-cancel': 'Отмена',
-        'naming-confirm': 'Аннотировать',
-        'loading-text': 'Обработка...',
-        'toast-success': 'Готово!'
-      },
-      ar: {
-        'nav-features': 'الميزات',
-        'nav-pricing': 'الأسعار',
-        'nav-desktop': 'سطح المكتب',
-        'nav-started': 'ابدأ',
-        'panel-upload': 'رفع الصور',
-        'upload-title': 'اسحب الصور إلى هنا',
-        'upload-desc': 'أو اضغط للتصفح',
-        'empty-preview-text': 'لم تُختار صوراً',
-        'btn-annotate': 'تعليق الصور',
-        'btn-download-all': 'تنزيل الكل',
-        'privacy-text': 'معالجة محلية',
-        'instructions-title': 'كيف يعمل',
-        'step1-title': 'رفع الصور',
-        'step1-desc': 'اسحب أو اضغط',
-        'step2-title': 'اختر التسمية',
-        'step2-desc': 'حدد تقنية التسمية',
-        'step3-title': 'تنزيل',
-        'step3-desc': 'احصل على الصور الموسومة',
-        'comparison-title': 'قبل / بعد',
-        'comparison-original': 'الأصل',
-        'comparison-annotated': 'مُعليق',
-        'results-title': 'الصور المُعليقة',
-        'pricing-title': 'الاشتراك',
-        'pricing-price': '7.99 دولار',
-        'pricing-period': 'في الشهر',
-        'pricing-feature1': 'معالجة غير مقيدة',
-        'pricing-feature2': 'إخراج HD',
-        'pricing-feature3': 'معالجة المجمعة',
-        'pricing-feature4': 'دعم أولي',
-        'pricing-btn': 'اشترك الآن',
-        'desktop-title': 'تطبيق سطح المكتب',
-        'desktop-subtitle': 'قريباً',
-        'desktop-desc': 'معالجة دون اتصال',
-        'desktop-badge': 'قريباً',
-        'naming-title': 'تسمية الملف',
-        'naming-date': 'التاريخ_الرقم',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'اسم الملف الأصلي',
-        'naming-original-desc': 'احفظ الاسم',
-        'naming-gps': 'إحداثيات GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'البادئة المخصصة',
-        'naming-custom-desc': 'أدخل نصًا',
-        'naming-cancel': 'إلغاء',
-        'naming-confirm': 'تعليق',
-        'loading-text': 'جارٍ المعالجة...',
-        'toast-success': 'اكتمل!'
-      }
-    };
-
-    let currentLang = 'en';
-    let selectedFiles = [];
-    let processedImages = [];
-    let currentNamingRule = 'date';
-    let currentCustomPrefix = '';
-    let showDebug = false;
+    let currentUser = null;
     let isSubscriber = false;
     const MAX_FREE_IMAGES = 1;
+    let selectedFiles = [];
+    let processedImages = [];
+    let renameIndex = -1;
+    let debugMode = false;
 
-    const geocodeCache = new Map();
-    const geocodeQueue = [];
-    let isProcessingQueue = false;
-    const RATE_LIMIT_MS = 1100;
+    const mockUsers = {
+      'test@example.com': { password: 'password123', name: '测试用户', isSubscriber: false },
+      'pro@example.com': { password: 'password123', name: '付费用户', isSubscriber: true }
+    };
 
-    function debugLog(message) {
-      const logDiv = document.getElementById('debug-log');
-      if (!logDiv) return;
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      const time = new Date().toLocaleTimeString();
-      entry.textContent = `[${time}] ${message}`;
-      logDiv.appendChild(entry);
-      logDiv.scrollTop = logDiv.scrollHeight;
-      console.log(message);
+    function debugLog(message, type = 'info') {
+      if (!debugMode) return;
+      const logsContainer = document.getElementById('debug-logs');
+      if (!logsContainer) return;
+      
+      const logElement = document.createElement('div');
+      logElement.className = `debug-log ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      logElement.textContent = `[${timestamp}] ${message}`;
+      logsContainer.appendChild(logElement);
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
     }
 
-    function toggleDebugPanel() {
-      showDebug = !showDebug;
-      const panel = document.getElementById('debug-panel');
-      if (panel) {
-        if (showDebug) panel.classList.add('show');
-        else panel.classList.remove('show');
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      if (toast && toastText) {
+        toast.className = 'toast';
+        if (type === 'error') toast.classList.add('error');
+        if (type === 'info') toast.classList.add('info');
+        toastText.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+      }
+      debugLog(`Toast: ${message}`, type);
+    }
+
+    function showLoading(show, text = '处理中...', status = '') {
+      const overlay = document.getElementById('loading-overlay');
+      const loadingText = document.getElementById('loading-text');
+      const loadingStatus = document.getElementById('loading-status');
+      
+      if (overlay) {
+        if (show) {
+          overlay.classList.add('show');
+          if (loadingText) loadingText.textContent = text;
+          if (loadingStatus) loadingStatus.textContent = status;
+        } else {
+          overlay.classList.remove('show');
+        }
+      }
+      debugLog(`Loading: ${show ? 'show' : 'hide'} - ${text}`, 'info');
+    }
+
+    function updateLoadingStatus(status) {
+      const loadingStatus = document.getElementById('loading-status');
+      if (loadingStatus) loadingStatus.textContent = status;
+      debugLog(`Status: ${status}`, 'info');
+    }
+
+    function showAuthModal() {
+      document.getElementById('auth-overlay')?.classList.add('show');
+    }
+
+    function hideAuthModal() {
+      document.getElementById('auth-overlay')?.classList.remove('show');
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('auth-email')?.value;
+      const password = document.getElementById('auth-password')?.value;
+      const errorDiv = document.getElementById('auth-error');
+
+      debugLog(`Login attempt: ${email}`, 'info');
+
+      if (!email || !password) {
+        errorDiv?.classList.add('show');
+        errorDiv.textContent = '请输入邮箱和密码';
+        return;
+      }
+
+      const user = mockUsers[email];
+      if (!user || user.password !== password) {
+        errorDiv?.classList.add('show');
+        errorDiv.textContent = '邮箱或密码错误';
+        return;
+      }
+
+      currentUser = user;
+      isSubscriber = user.isSubscriber;
+      hideAuthModal();
+      updateUserUI();
+      updateUploadLimit();
+      showToast(`欢迎回来, ${user.name}!`);
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      isSubscriber = false;
+      updateUserUI();
+      updateUploadLimit();
+      showToast('已退出登录');
+    }
+
+    function updateUserUI() {
+      const userMenu = document.getElementById('user-menu');
+      const loginBtn = document.getElementById('login-btn');
+      const userName = document.getElementById('user-name');
+      const userStatus = document.getElementById('user-status');
+
+      if (currentUser) {
+        userMenu.style.display = 'block';
+        loginBtn.style.display = 'none';
+        userName.textContent = currentUser.name;
+        userStatus.style.display = currentUser.isSubscriber ? 'inline-block' : 'none';
+      } else {
+        userMenu.style.display = 'none';
+        loginBtn.style.display = 'inline-block';
       }
     }
 
-    function toggleLangDropdown() {
-      const dropdown = document.getElementById('lang-dropdown');
-      if (dropdown) dropdown.classList.toggle('show');
-    }
-
-    function setLanguage(lang) {
-      currentLang = lang;
-      const trans = translations[lang];
-      const flags = { 'en': '🇺🇸', 'zh': '🇹🇼', 'fr': '🇫🇷', 'es': '🇪🇸', 'ru': '🇷🇺', 'ar': '🇸🇦' };
-      const codes = { 'en': 'EN', 'zh': '中文', 'fr': 'FR', 'es': 'ES', 'ru': 'RU', 'ar': 'AR' };
-      const flagEl = document.getElementById('lang-flag');
-      const codeEl = document.getElementById('lang-code');
-      const dropdown = document.getElementById('lang-dropdown');
-      
-      if (flagEl) flagEl.textContent = flags[lang];
-      if (codeEl) codeEl.textContent = codes[lang];
-      if (dropdown) dropdown.classList.remove('show');
-      
-      Object.keys(trans).forEach(key => {
-        const el = document.getElementById(key);
-        if (el) el.textContent = trans[key];
-      });
-      
-      const toastText = document.getElementById('toast-text');
-      const loadingText = document.getElementById('loading-text');
-      if (toastText) toastText.textContent = trans['toast-success'];
-      if (loadingText) loadingText.textContent = trans['loading-text'];
-      
-      document.documentElement.lang = lang;
-      document.body.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+    function updateUploadLimit() {
+      const limitEl = document.getElementById('upload-limit');
+      if (isSubscriber) {
+        limitEl.textContent = '订阅用户：无限图片处理';
+        limitEl.style.color = '#86efac';
+      } else {
+        limitEl.textContent = `免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片`;
+        limitEl.style.color = '#fbbf24';
+      }
     }
 
     function handleFileSelect(e) { 
       const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
+      debugLog(`Selected ${files.length} files`, 'info');
+      
       if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
-        showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
+        showToast(`免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片，请登录订阅账户获取无限处理权限`, 'error');
         return;
       }
       if (!isSubscriber) {
@@ -711,11 +410,12 @@
 
     function handleDrop(e) { 
       e.preventDefault(); 
-      e.currentTarget.classList.remove('active'); 
       const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); 
+      debugLog(`Dropped ${files.length} files`, 'info');
+      
       if (files.length > 0) { 
         if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
-          showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
+          showToast(`免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片`, 'error');
           return;
         }
         if (!isSubscriber) {
@@ -738,37 +438,29 @@
       if (selectedFiles.length > 0) {
         preview.style.display = 'grid'; 
         emptyPreview.style.display = 'none';
+        processBtn.disabled = false; 
+        downloadBtn.disabled = processedImages.length === 0;
         
-        const exceedsLimit = !isSubscriber && selectedFiles.length > MAX_FREE_IMAGES;
-        processBtn.disabled = exceedsLimit; 
-        downloadBtn.disabled = true;
-        
-        if (exceedsLimit) {
-          processBtn.title = `Free users can only process ${MAX_FREE_IMAGES} images at once. Subscribe for unlimited batch processing.`;
-        } else {
-          processBtn.title = '';
-        }
         preview.innerHTML = '';
-        selectedFiles.slice(0, 6).forEach((file, i) => {
+        selectedFiles.slice(0, 10).forEach((file, i) => {
           const item = document.createElement('div'); 
           item.className = 'preview-item';
           const img = document.createElement('img'); 
           img.src = URL.createObjectURL(file);
           const filename = document.createElement('span'); 
-          filename.className = 'filename'; 
           filename.textContent = file.name;
           item.appendChild(img); 
           item.appendChild(filename); 
           preview.appendChild(item);
         });
-        if (selectedFiles.length > 6) {
+        if (selectedFiles.length > 10) {
           const more = document.createElement('div'); 
           more.className = 'preview-item';
           more.style.display = 'flex'; 
           more.style.alignItems = 'center'; 
           more.style.justifyContent = 'center'; 
           more.style.color = '#71717a';
-          more.textContent = `+${selectedFiles.length - 6}`; 
+          more.textContent = `+${selectedFiles.length - 10}`; 
           preview.appendChild(more);
         }
       } else { 
@@ -777,1820 +469,532 @@
         processBtn.disabled = true; 
         downloadBtn.disabled = true; 
       }
-    }
-
-    function showNamingModal() { 
-      const overlay = document.getElementById('naming-modal-overlay');
-      if (overlay) overlay.classList.add('show'); 
-    }
-
-    function hideNamingModal() { 
-      const overlay = document.getElementById('naming-modal-overlay');
-      if (overlay) overlay.classList.remove('show'); 
-    }
-
-    function confirmNaming() {
-      const checked = document.querySelector('input[name="naming-rule-modal"]:checked');
-      const customInput = document.getElementById('custom-prefix-modal');
-      
-      if (checked) currentNamingRule = checked.value;
-      if (customInput) currentCustomPrefix = customInput.value.trim();
-      
-      hideNamingModal(); 
-      processImages();
+      debugLog(`Preview updated: ${selectedFiles.length} files`, 'info');
     }
 
     async function extractExif(file) {
-      try {
-        debugLog(`Processing file: ${file.name} (${file.size} bytes)`);
-        const buffer = await file.arrayBuffer();
-        const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
-        const dataView = new DataView(buffer);
-        
-        if (dataView.getUint16(0) !== 0xFFD8) {
-          debugLog('Not a JPEG file');
-          return result;
-        }
-        
-        let offset = 2;
-        while (offset < buffer.byteLength - 2) {
-          const marker = dataView.getUint16(offset);
-          
-          if (marker === 0xFFE1) {
-            const length = dataView.getUint16(offset + 2);
-            const exifOffset = offset + 4;
-            if (dataView.getUint32(exifOffset) === 0x45786966) {
-              debugLog('Found EXIF header');
-              const tiffOffset = exifOffset + 6;
-              const byteOrder = dataView.getUint16(tiffOffset);
-              const isLittleEndian = byteOrder === 0x4949;
+      debugLog(`Extracting EXIF from: ${file.name}`, 'info');
+      return new Promise((resolve) => {
+        try {
+          EXIF.getData(file, function() {
+            const result = { 
+              hasExif: false, 
+              gps: null, 
+              location: null, 
+              placeName: null, 
+              timestamp: null,
+              rawData: {}
+            };
+
+            try {
+              const allTags = EXIF.getAllTags(this);
+              result.rawData = allTags;
+              debugLog(`EXIF tags found: ${Object.keys(allTags).length}`, 'info');
               
-              const tiffMarker = dataView.getUint16(tiffOffset + 2, isLittleEndian);
-              
-              if (tiffMarker === 0x002A) {
-                const firstIfdOffset = dataView.getUint32(tiffOffset + 4, isLittleEndian) + tiffOffset;
-                const exifData = parseTiffIfd(dataView, tiffOffset, firstIfdOffset, isLittleEndian);
-                if (exifData) {
-                  result.hasExif = true; 
-                  result.timestamp = exifData.timestamp;
-                  if (exifData.gpsLatitude !== undefined && exifData.gpsLongitude !== undefined) {
-                    const lat = exifData.gpsLatitude;
-                    const lng = exifData.gpsLongitude;
-                    debugLog(`GPS Coords found: ${lat}, ${lng}`);
-                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                      result.gps = { lat, lng }; 
-                      result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                    }
+              if (Object.keys(allTags).length > 0) {
+                result.hasExif = true;
+                
+                if (allTags.DateTime) {
+                  result.timestamp = allTags.DateTime;
+                  debugLog(`Timestamp found: ${result.timestamp}`, 'success');
+                } else if (allTags.DateTimeOriginal) {
+                  result.timestamp = allTags.DateTimeOriginal;
+                  debugLog(`Timestamp (original) found: ${result.timestamp}`, 'success');
+                }
+
+                if (allTags.GPSLatitude && allTags.GPSLongitude) {
+                  const lat = convertDMSToDD(allTags.GPSLatitude, allTags.GPSLatitudeRef);
+                  const lng = convertDMSToDD(allTags.GPSLongitude, allTags.GPSLongitudeRef);
+                  
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    result.gps = { lat, lng };
+                    result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    debugLog(`GPS coordinates found: ${result.location}`, 'success');
                   }
                 }
               }
-              break;
+            } catch (parseError) {
+              debugLog(`Error parsing EXIF: ${parseError.message}`, 'error');
             }
-          }
-          offset += dataView.getUint16(offset + 2) + 2;
+
+            resolve(result);
+          });
+        } catch (e) {
+          debugLog(`EXIF extraction failed: ${e.message}`, 'error');
+          resolve({ hasExif: false, gps: null, location: null, placeName: null, timestamp: null });
         }
-        return result;
+      });
+    }
+
+    function convertDMSToDD(degreesMinutesSeconds, ref) {
+      if (!degreesMinutesSeconds || !ref) {
+        return NaN;
+      }
+
+      try {
+        const degrees = degreesMinutesSeconds[0].numerator / degreesMinutesSeconds[0].denominator;
+        const minutes = degreesMinutesSeconds[1].numerator / degreesMinutesSeconds[1].denominator;
+        const seconds = degreesMinutesSeconds[2].numerator / degreesMinutesSeconds[2].denominator;
+
+        let dd = degrees + minutes / 60 + seconds / 3600;
+        if (ref === 'S' || ref === 'W') dd = dd * -1;
+        
+        debugLog(`DMS converted: ${degrees}°${minutes}'${seconds}" ${ref} -> ${dd}`, 'success');
+        return dd;
       } catch (e) {
-        debugLog(`EXIF error: ${e.message}`);
-        return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
+        debugLog(`DMS conversion error: ${e.message}`, 'error');
+        return NaN;
       }
     }
-
-    function parseTiffIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-
-        if (tag === 0x0132) result.timestamp = readString(dataView, valueOffset, count);
-        else if (tag === 0x8769) {
-          const exifIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseTiffIfd(dataView, tiffOffset, exifIfdOffset, isLittleEndian));
-        } else if (tag === 0x8825) {
-          const gpsIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseGpsIfd(dataView, tiffOffset, gpsIfdOffset, isLittleEndian));
-        }
-        entryOffset += 12;
-      }
-
-      const nextIfd = dataView.getUint32(entryOffset, isLittleEndian);
-      if (nextIfd !== 0) Object.assign(result, parseTiffIfd(dataView, tiffOffset, nextIfd + tiffOffset, isLittleEndian));
-      return result;
-    }
-
-    function parseGpsIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-
-      let latRef, lonRef, latDegNum, latDegDen, latMinNum, latMinDen, latSecNum, latSecDen;
-      let lonDegNum, lonDegDen, lonMinNum, lonMinDen, lonSecNum, lonSecDen;
-
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-
-        switch (tag) {
-          case 0x0001: latRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0002: if (format === 5 && count === 3) {
-            latDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
-            latDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-            latMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
-            latMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-            latSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
-            latSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-          } break;
-          case 0x0003: lonRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0004: if (format === 5 && count === 3) {
-            lonDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
-            lonDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-            lonMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
-            lonMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-            lonSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
-            lonSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-          } break;
-        }
-        entryOffset += 12;
-      }
-
-      if (latDegNum !== undefined) {
-        const latDeg = latDegNum / latDegDen;
-        const latMin = latMinNum / latMinDen;
-        const latSec = latSecNum / latSecDen;
-        let lat = latDeg + latMin/60 + latSec/3600;
-        if (latRef === 'S') lat = -lat;
-        result.gpsLatitude = lat;
-      }
-
-      if (lonDegNum !== undefined) {
-        const lonDeg = lonDegNum / lonDegDen;
-        const lonMin = lonMinNum / lonMinDen;
-        const lonSec = lonSecNum / lonSecDen;
-        let lon = lonDeg + lonMin/60 + lonSec/3600;
-        if (lonRef === 'W') lon = -lon;
-        result.gpsLongitude = lon;
-      }
-      debugLog(`Parsed GPS: ${result.gpsLatitude}, ${result.gpsLongitude}`);
-      return result;
-    }
-
-    function getFormatSize(format) { 
-      switch (format) { 
-        case 1: return 1; 
-        case 2: return 1; 
-        case 3: return 2; 
-        case 4: return 4; 
-        case 5: return 8; 
-        case 7: return 1; 
-        default: return 1; 
-      } 
-    }
-    
-    function readString(dataView, offset, length) { 
-      let str = ''; 
-      for (let i = 0; i < length; i++) { 
-        const char = dataView.getUint8(offset + i); 
-        if (char === 0) break; 
-        str += String.fromCharCode(char); 
-      } 
-      return str; 
-    }
-
-    function getCacheKey(lat, lng) {
-      return `${lat.toFixed(5)}_${lng.toFixed(5)}`;
-    }
-
-    function getCachedResult(lat, lng) {
-      const key = getCacheKey(lat, lng);
-      const cached = localStorage.getItem(`geocode_cache_${key}`);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.expires > Date.now()) return parsed.address;
-        } catch {}
-      }
-      return null;
-    }
-
-    function setCachedResult(lat, lng, address) {
-      const key = getCacheKey(lat, lng);
-      const cacheEntry = { address, expires: Date.now() + 7 * 24 * 60 * 60 * 1000 };
-      localStorage.setItem(`geocode_cache_${key}`, JSON.stringify(cacheEntry));
-      geocodeCache.set(key, address);
-    }
-
-    async function processQueue() {
-      if (isProcessingQueue || geocodeQueue.length === 0) return;
-      isProcessingQueue = true;
-
-      while (geocodeQueue.length > 0) {
-        const { lat, lng, resolve } = geocodeQueue.shift();
-        const cached = getCachedResult(lat, lng);
-        if (cached) { 
-          debugLog(`Using cached address: ${cached}`); 
-          resolve(cached); 
-          await sleep(RATE_LIMIT_MS / 3); 
-          continue; 
-        }
-
-        try {
-          debugLog(`Calling Nominatim API for ${lat}, ${lng}`);
-          debugLog(`API URL: https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-          const controller = new AbortController();
-          const timeout = setTimeout(() => {
-            debugLog('Nominatim API timeout - aborting request');
-            controller.abort();
-          }, 15000); // Increased to 15 seconds
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-            { 
-              headers: { 'User-Agent': 'GeoStamp/1.0 (contact@geostamp.app)' },
-              signal: controller.signal
-            }
-          );
-          clearTimeout(timeout);
-
-          debugLog(`Nominatim response status: ${res.status}`);
-          if (res.ok) {
-            const data = await res.json();
-            debugLog(`Nominatim response: ${JSON.stringify(data)}`);
-            const address = data.display_name 
-              ? (data.display_name.split(', ').length >= 3 
-                  ? data.display_name.split(', ').slice(0, 3).join(', ') 
-                  : data.display_name)
-              : null;
-            if (address) { 
-              setCachedResult(lat, lng, address);
-              debugLog(`Resolved address: ${address}`);
-            } else {
-              debugLog('No address in response');
-            }
-            resolve(address);
-          } else {
-            debugLog(`Nominatim API failed with status: ${res.status}`);
-            resolve(null); 
-          }
-        } catch(e) { 
-          debugLog(`Geocoding error: ${e.name} - ${e.message}`);
-          if (e.name === 'AbortError') {
-            debugLog('Request was aborted due to timeout');
-          }
-          resolve(null); 
-        }
-
-        await sleep(RATE_LIMIT_MS);
-      }
-      isProcessingQueue = false;
-    }
-
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-    async function reverseGeocode(lat, lng) {
-      const cached = getCachedResult(lat, lng);
-      if (cached) return cached;
-
-      return new Promise(resolve => {
-        geocodeQueue.push({ lat, lng, resolve });
-        processQueue();
-      });
-    }
-
-    function getFileName(index, originalName, exif) {
-      const selectedRule = currentNamingRule; 
-      const serial = String(index + 1).padStart(3, '0');
-      switch (selectedRule) {
-        case 'date': return `${getTimestamp()}_${serial}.jpg`;
-        case 'original': return originalName;
-        case 'gps': 
-          if (exif && exif.gps) { 
-            const lat = exif.gps.lat.toFixed(2).replace('.', '_'); 
-            const lng = exif.gps.lng.toFixed(2).replace('.', '_'); 
-            return `${lat}_${lng}_${serial}.jpg`; 
-          } 
-          return `${getTimestamp()}_${serial}.jpg`;
-        case 'custom': 
-          const prefix = currentCustomPrefix || 'custom'; 
-          return `${prefix}_${serial}.jpg`;
-        default: return `${getTimestamp()}_${serial}.jpg`;
-      }
-    }
-
-    async function processImage(file, exif, serial) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas'); 
-          canvas.width = img.width; 
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d'); 
-          ctx.drawImage(img, 0, 0);
-
-          const barHeight = Math.max(35, Math.floor(img.height * 0.045));
-          const padding = Math.max(10, Math.floor(img.width * 0.01));
-          const fontSize = Math.max(11, Math.floor(barHeight * 0.4));
-
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; 
-          ctx.beginPath(); 
-          ctx.roundRect(0, img.height - barHeight, img.width, barHeight, [10, 0, 0, 0]); 
-          ctx.fill();
-          ctx.fillStyle = '#fff'; 
-          ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`; 
-          ctx.textBaseline = 'middle';
-
-          const parts = [];
-          if (exif.placeName && exif.placeName.trim()) parts.push(exif.placeName.trim());
-          else if (exif.location && exif.location.trim()) parts.push(exif.location.trim());
-          else parts.push('No GPS data');
-
-          if (exif.timestamp && exif.timestamp.trim()) parts.push(exif.timestamp.trim());
-          else parts.push(new Date().toISOString().replace('T', ' ').substring(0, 19));
-
-          let serialText = `#${typeof serial === 'number' ? serial : '?'}`;
-          if (currentNamingRule === 'custom' && currentCustomPrefix) serialText = `${currentCustomPrefix}_${typeof serial === 'number' ? serial : '?'}`;
-          else if (currentNamingRule === 'original') serialText = '';
-          if (serialText) parts.push(serialText);
-
-          const text = parts.join(' | ');
-          const textWidth = ctx.measureText(text).width;
-          if (textWidth > img.width - padding * 2) { 
-            const scaled = Math.max(9, fontSize * (img.width - padding * 2) / textWidth); 
-            ctx.font = `${scaled}px -apple-system, BlinkMacSystemFont, sans-serif`; 
-          }
-          ctx.fillText(text, padding, img.height - barHeight / 2);
-
-          canvas.toBlob(blob => { 
-            URL.revokeObjectURL(img.src); 
-            resolve({ blob, url: URL.createObjectURL(blob) });
-          }, 'image/jpeg', 0.95);
-        };
-
-        img.onerror = () => { resolve(null); };
-        img.src = URL.createObjectURL(file);
-      });
-    }
-
-    async function processImages() {
-      const loadingOverlay = document.getElementById('loading-overlay');
-      const progressFill = document.getElementById('progress-fill');
-      const loadingText = document.getElementById('loading-text');
-      const downloadBtn = document.getElementById('download-all-btn');
-      const resultsSection = document.getElementById('results-section');
-      const resultsGrid = document.getElementById('results-grid');
-      const emptyResults = document.getElementById('empty-results');
-
-      loadingOverlay.classList.add('show'); 
-      progressFill.style.width = '0%'; 
-      resultsSection.style.display = 'none';
-      processedImages = [];
-
-      for (let i = 0; i < selectedFiles.length; i++) {
-        loadingText.textContent = `${translations[currentLang]['loading-text']} ${i + 1}/${selectedFiles.length}`;
-        debugLog(`Processing image ${i + 1}/${selectedFiles.length}`);
-
-        const exif = await extractExif(selectedFiles[i]);
-        debugLog(`EXIF data: ${JSON.stringify(exif)}`);
-        debugLog(`GPS data: lat=${exif.gps?.lat}, lng=${exif.gps?.lng}, location=${exif.location}, placeName=${exif.placeName}`);
-        if (exif.gps) {
-          debugLog(`Calling reverse geocode for ${exif.gps.lat}, ${exif.gps.lng}`);
-          try {
-            const placeName = await reverseGeocode(exif.gps.lat, exif.gps.lng);
-            debugLog(`Reverse geocode result: ${placeName}`);
-            exif.placeName = placeName || exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
-            debugLog(`Final placeName set to: ${exif.placeName}`);
-          } catch(e) {
-            debugLog(`Reverse geocode error: ${e.message}`);
-            exif.placeName = exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
-          }
-        } else {
-          debugLog('No GPS data found in EXIF');
-        }
-
-        const processed = await processImage(selectedFiles[i], exif, i + 1);
-        if (processed) {
-          const fileName = getFileName(i, selectedFiles[i].name, exif);
-          processedImages.push({ ...processed, originalName: selectedFiles[i].name, fileName });
-        }
-        progressFill.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
-      }
-
-      loadingOverlay.classList.remove('show');
-      resultsSection.style.display = 'flex';
-      resultsGrid.innerHTML = '';
-      emptyResults.style.display = 'none';
-
-      processedImages.forEach((img, i) => {
-        const card = document.createElement('div'); 
-        card.className = 'result-card';
-        const imageEl = document.createElement('img'); 
-        imageEl.src = img.url;
-        const info = document.createElement('div'); 
-        info.className = 'info';
-        const name = document.createElement('span'); 
-        name.className = 'name'; 
-        name.textContent = img.fileName;
-        const btn = document.createElement('button'); 
-        btn.className = 'download-btn';
-        btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>';
-        btn.onclick = () => downloadSingle(img.blob, img.fileName);
-
-        info.appendChild(name); 
-        info.appendChild(btn);
-        card.appendChild(imageEl); 
-        card.appendChild(info);
-        resultsGrid.appendChild(card);
-      });
-
-      downloadBtn.disabled = false;
-      showToast(translations[currentLang]['toast-success']);
-    }
-
-    function downloadSingle(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; 
-      a.download = filename;
-      document.body.appendChild(a); 
-      a.click();
-      document.body.removeChild(a); 
-      URL.revokeObjectURL(url);
-    }
-
-    async function downloadAllImages() {
-      if (processedImages.length === 0) return;
-      if (processedImages.length === 1) {
-        downloadSingle(processedImages[0].blob, processedImages[0].fileName);
-        return;
-      }
-
-      const zip = new JSZip();
-      processedImages.forEach(img => {
-        zip.file(img.fileName, img.blob);
-      });
-
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
-      const url = URL.createObjectURL(blob); 
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `annotated_images_${timestamp}.zip`;
-      document.body.appendChild(a); 
-      a.click(); 
-      document.body.removeChild(a); 
-      URL.revokeObjectURL(url);
-    }
-
-    function showToast(message) { 
-      const toast = document.getElementById('toast'); 
-      const toastText = document.getElementById('toast-text'); 
-      toastText.textContent = message; 
-      toast.classList.add('show'); 
-      setTimeout(() => toast.classList.remove('show'), 3000); 
-    }
-
-    function getSerial() { 
-      const today = new Date(); 
-      const key = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-      const stored = localStorage.getItem(`serial_${key}`); 
-      const serial = stored ? parseInt(stored, 10) + 1 : 1; 
-      localStorage.setItem(`serial_${key}`, serial.toString()); 
-      return serial; 
-    }
-    
-    function getTimestamp() { 
-      const now = new Date(); 
-      return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      isSubscriber = localStorage.getItem('isSubscriber') === 'true';
-      
-      document.getElementById('lang-btn').addEventListener('click', toggleLangDropdown);
-      document.getElementById('toggle-debug').addEventListener('click', toggleDebugPanel);
-      document.getElementById('file-input').addEventListener('change', handleFileSelect);
-      document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
-      document.getElementById('upload-area').addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('active'); });
-      document.getElementById('upload-area').addEventListener('dragleave', (e) => { e.preventDefault(); e.currentTarget.classList.remove('active'); });
-      document.getElementById('upload-area').addEventListener('drop', handleDrop);
-      document.getElementById('process-btn').addEventListener('click', showNamingModal);
-      document.getElementById('download-all-btn').addEventListener('click', downloadAllImages);
-      document.getElementById('naming-cancel').addEventListener('click', hideNamingModal);
-      document.getElementById('naming-confirm').addEventListener('click', confirmNaming);
-      
-      document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.addEventListener('click', () => setLanguage(opt.dataset.lang));
-      });
-
-      document.querySelectorAll('input[name="naming-rule-modal"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-          document.querySelectorAll('.naming-modal .option').forEach(opt => opt.classList.remove('selected'));
-          e.target.closest('.option').classList.add('selected');
-          const customInput = document.getElementById('custom-prefix-modal');
-          if (e.target.value === 'custom') { customInput.classList.add('show'); customInput.disabled = false; }
-          else { customInput.classList.remove('show'); customInput.disabled = true; }
-        });
-      });
-    });
-  </script>
-</body>
-=======
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoStamp - Image Geotagging</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); min-height: 100vh; color: #e4e4e7; }
-    #app { min-height: 100vh; display: flex; flex-direction: column; }
-    
-    header { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo svg { width: 32px; height: 32px; }
-    .logo span { font-weight: 600; font-size: 17px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { text-decoration: none; color: #a1a1aa; font-size: 13px; font-weight: 500; transition: color 0.2s; }
-    .nav-links a:hover { color: #e4e4e7; }
-    .nav-links .btn { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; }
-    
-    .lang-selector { position: relative; }
-    .lang-selector .lang-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-size: 13px; color: #e4e4e7; }
-    .lang-selector .lang-btn:hover { background: rgba(255,255,255,0.1); }
-    .lang-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: #1f1f2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; min-width: 140px; z-index: 100; }
-    .lang-dropdown.show { display: block; }
-    .lang-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; background: none; border: none; color: #e4e4e7; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; }
-    .lang-option:hover { background: rgba(255,255,255,0.08); }
-    
-    .main-content { 
-      flex: 1; 
-      display: grid; 
-      grid-template-columns: 1fr 1fr 2fr; 
-      grid-template-rows: 1.5fr 0.8fr 0.7fr; 
-      gap: 16px; 
-      padding: 20px; 
-      max-width: 1400px; 
-      margin: 0 auto; 
-      width: 100%; 
-      height: calc(100vh - 80px);
-      box-sizing: border-box;
-    }
-    .grid-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
-    .grid-item.comparison { grid-column: 1; grid-row: 1 / 3; }
-    .grid-item.upload { grid-column: 2; grid-row: 1; }
-    .grid-item.results { grid-column: 3; grid-row: 1 / 4; }
-    .grid-item.instructions { grid-column: 1; grid-row: 3; }
-    .grid-item.desktop { grid-column: 2; grid-row: 2; }
-    .grid-item.pricing { grid-column: 2; grid-row: 3; }
-    
-    .panel-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #f4f4f5; }
-    
-    .upload-area { background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; margin-top: 16px; }
-    .upload-area:hover, .upload-area.active { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
-    .upload-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-    .upload-icon svg { width: 24px; height: 24px; color: #a1a1aa; }
-    .upload-area h3 { font-size: 14px; font-weight: 500; color: #e4e4e7; margin-bottom: 4px; }
-    .upload-area p { font-size: 12px; color: #71717a; }
-    
-    #file-input { display: none; }
-    
-    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 16px; }
-    .preview-item { aspect-ratio: 4/3; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; position: relative; }
-    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .preview-item span { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; font-size: 10px; overflow: hidden; }
-    
-    .action-buttons { display: flex; gap: 8px; margin-top: 12px; }
-    .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
-    .btn-secondary { background: rgba(255,255,255,0.08); color: #e4e4e7; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
-    .steps { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-    .step { display: flex; gap: 10px; }
-    .step-number { width: 22px; height: 22px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
-    .step-title { font-size: 13px; font-weight: 500; color: #e4e4e7; margin-bottom: 2px; }
-    .step-desc { font-size: 11px; color: #71717a; }
-    
-    .comparison-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-    .comparison-item { aspect-ratio: 16/9; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative; }
-    .comparison-item .label { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-    
-    .results-section { display: flex; flex-direction: column; }
-    .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; overflow-y: auto; }
-    .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
-    .result-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
-    .result-card .info { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); }
-    .result-card .name { font-size: 12px; color: #a1a1aa; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .download-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
-    .download-btn svg { width: 16px; height: 16px; color: #e4e4e7; }
-    
-    .pricing-section { text-align: center; }
-    .pricing-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #f4f4f5; }
-    .price { font-size: 28px; font-weight: 600; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .period { font-size: 12px; color: #71717a; margin-top: 4px; }
-    .pricing-section ul { margin-top: 16px; padding-left: 20px; text-align: left; }
-    .pricing-section li { padding: 4px 0; font-size: 12px; color: #a1a1aa; }
-    .pricing-section button { width: 100%; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; margin-top: 12px; }
-    
-    .desktop-app { text-align: center; }
-    .desktop-app h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #f4f4f5; }
-    .desktop-app .subtitle { font-size: 13px; color: #a78bfa; font-weight: 500; margin-top: 8px; }
-    .desktop-app p { font-size: 12px; color: #71717a; margin-top: 8px; }
-    .desktop-app .badge { display: inline-block; background: rgba(139, 92, 246, 0.15); color: #a78bfa; padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-top: 12px; }
-    
-    .privacy-badge { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 6px; padding: 8px 10px; font-size: 11px; color: #86efac; display: flex; align-items: center; gap: 6px; margin-top: 10px; }
-    
-    .naming-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
-    .naming-modal-overlay.show { display: flex; }
-    .naming-modal { background: #1f1f2e; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
-    .naming-modal h3 { margin: 0 0 20px 0; font-size: 18px; color: #f4f4f5; font-weight: 600; }
-    .naming-modal .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-    .naming-modal .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
-    .naming-modal .option.selected { background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.5); }
-    .naming-modal .option .label { font-size: 14px; color: #e4e4e7; }
-    .naming-modal .option .desc { font-size: 12px; color: #71717a; }
-    .naming-modal .custom-input { margin-top: 8px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e4e4e7; font-size: 14px; width: 100%; box-sizing: border-box; display: none; }
-    .naming-modal .custom-input.show { display: block; }
-    .naming-modal .buttons { display: flex; gap: 12px; }
-    .naming-modal .buttons button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
-    .naming-modal .btn-cancel { background: rgba(255,255,255,0.08); color: #a1a1aa; }
-    .naming-modal .btn-confirm { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
-    
-    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; }
-    .loading-overlay.show { display: flex; }
-    .loading-content { text-align: center; }
-    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .progress-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin: 0 auto; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #06b6d4); width: 0%; transition: width 0.3s; }
-    
-    .toast { display: none; position: fixed; bottom: 24px; right: 24px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 14px 18px; align-items: center; gap: 10px; }
-    .toast.show { display: flex; animation: slideIn 0.3s ease; }
-    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
-    .debug-panel { position: fixed; bottom: 80px; left: 24px; background: rgba(0,0,0,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; max-width: 400px; max-height: 300px; overflow-y: auto; z-index: 999; font-family: monospace; font-size: 11px; color: #86efac; display: none; }
-    .debug-panel.show { display: block; }
-    .debug-panel h4 { color: #f4f4f5; margin-bottom: 8px; font-size: 12px; }
-    .debug-panel .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .debug-panel .log-entry:last-child { border-bottom: none; }
-    
-    @media (max-width: 900px) { 
-      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; }
-      .grid-item.comparison, .grid-item.upload, .grid-item.results,
-      .grid-item.instructions, .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <header>
-      <div class="logo">
-        <svg viewBox="0 0 32 32" fill="none">
-          <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
-          <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/><path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#fff"/>
-        </svg>
-        <span>GeoStamp</span>
-      </div>
-      <div class="nav-links">
-        <a href="#features" id="nav-features">Features</a>
-        <a href="#pricing" id="nav-pricing">Pricing</a>
-        <a href="#desktop" id="nav-desktop">Desktop</a>
-        <a href="#" class="btn" id="nav-started">Get Started</a>
-        <div class="lang-selector">
-          <button class="lang-btn" id="lang-btn">
-            <span id="lang-flag">🇺🇸</span>
-            <span id="lang-code">EN</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
-          <div class="lang-dropdown" id="lang-dropdown">
-            <button class="lang-option" data-lang="en">🇺🇸 English</button>
-            <button class="lang-option" data-lang="zh">🇹🇼 繁體中文</button>
-            <button class="lang-option" data-lang="fr">🇫🇷 Français</button>
-            <button class="lang-option" data-lang="es">🇪🇸 Español</button>
-            <button class="lang-option" data-lang="ru">🇷🇺 Русский</button>
-            <button class="lang-option" data-lang="ar">🇸🇦 العربية</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <div class="main-content">
-      <div class="grid-item comparison">
-        <h3 id="comparison-title">Before & After</h3>
-        <div class="comparison-grid">
-          <div class="comparison-item">
-            <div class="label" id="comparison-original">Original</div>
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3C/svg%3E" alt="Before" style="width:100%;height:100%;object-fit:cover;">
-          </div>
-          <div class="comparison-item">
-            <div class="label" id="comparison-annotated">Annotated</div>
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'%3E%3Crect fill='%231a1a2e' width='400' height='225'/%3E%3Crect fill='%232a2a4e' x='50' y='40' width='300' height='145' rx='8'/%3E%3Ccircle cx='200' cy='112' r='40' fill='%233a3a6e'/%3E%3Crect x='0' y='185' width='400' height='40' fill='rgba(0,0,0,0.7)'/%3E%3Ctext x='16' y='210' fill='white' font-size='12' font-family='Arial'%3EShanghai Bund | 2024-01-15 10:30 | #1%3C/text%3E%3C/svg%3E" alt="After" style="width:100%;height:100%;object-fit:cover;">
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-item upload">
-        <h3 class="panel-title" id="panel-upload">Upload Images</h3>
-        <input type="file" id="file-input" accept="image/*" multiple>
-        <div class="upload-area" id="upload-area">
-          <div class="upload-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-          </div>
-          <h3 id="upload-title">Drop images here</h3>
-          <p id="upload-desc">or click to browse</p>
-        </div>
-        <div id="preview-container" class="preview-grid" style="display: none;"></div>
-        <div id="empty-preview" style="text-align: center; padding: 12px 0; color: #71717a; font-size: 12px;"><p id="empty-preview-text">No images selected</p></div>
-        <div class="action-buttons">
-          <button id="process-btn" class="btn btn-primary" disabled><span id="btn-annotate">Annotate Images</span></button>
-          <button id="download-all-btn" class="btn btn-secondary" disabled><span id="btn-download-all">Download All</span></button>
-        </div>
-        <div class="privacy-badge"><span>🔒</span><span id="privacy-text">Your images are processed locally</span></div>
-        <div style="margin-top: 8px;">
-          <button id="toggle-debug" style="font-size: 10px; padding: 4px 8px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #a78bfa; border-radius: 4px; cursor: pointer;">Toggle Debug</button>
-        </div>
-      </div>
-
-      <div class="grid-item results" id="results-section">
-        <h3 id="results-title">Annotated Images</h3>
-        <div id="results-grid" class="results-grid"></div>
-        <div id="empty-results" style="text-align: center; padding: 40px 0; color: #71717a; font-size: 12px;">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          <p>Process images to see results</p>
-        </div>
-      </div>
-
-      <div class="grid-item instructions">
-        <h3 id="instructions-title">How It Works</h3>
-        <div class="steps">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-content">
-              <div class="step-title" id="step1-title">Upload Images</div>
-              <div class="step-desc" id="step1-desc">Drag or click to upload photos with GPS data</div>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-content">
-              <div class="step-title" id="step2-title">Choose Naming</div>
-              <div class="step-desc" id="step2-desc">Select your preferred file naming convention</div>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-content">
-              <div class="step-title" id="step3-title">Download</div>
-              <div class="step-desc" id="step3-desc">Get your geotagged images with location overlays</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-item desktop">
-        <div class="desktop-app">
-          <h3 id="desktop-title">Desktop App</h3>
-          <div class="subtitle" id="desktop-subtitle">Unlimited Processing</div>
-          <p id="desktop-desc">Process unlimited photos offline with local processing</p>
-          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.Setup.exe" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Windows (.exe)
-            </a>
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/GeoStamp.dmg" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              macOS (.dmg)
-            </a>
-            <a href="https://github.com/Ai01-8389/geostamp/releases/download/v1.0.0/geostamp_1.0.0_amd64.deb" class="download-link" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(139, 92, 246, 0.15); border-radius: 8px; color: #a78bfa; text-decoration: none; font-size: 13px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Linux (.deb)
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-item pricing">
-        <div class="pricing-section">
-          <h3 id="pricing-title">Subscription</h3>
-          <div class="price" id="pricing-price">$7.99</div>
-          <div class="period" id="pricing-period">per month</div>
-          <ul>
-            <li id="pricing-feature1">Unlimited image processing</li>
-            <li id="pricing-feature2">HD quality output</li>
-            <li id="pricing-feature3">Batch processing support</li>
-            <li id="pricing-feature4">Priority support</li>
-          </ul>
-          <button id="pricing-btn">Subscribe Now</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="naming-modal-overlay" class="naming-modal-overlay">
-      <div class="naming-modal">
-        <h3 id="naming-title">File Naming</h3>
-        <div class="options">
-          <label class="option selected"><input type="radio" name="naming-rule-modal" value="date" checked><div><div class="label" id="naming-date">Date_Serial</div><div class="desc" id="naming-date-desc">20240115_001.jpg</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="original"><div><div class="label" id="naming-original">Original Filename</div><div class="desc" id="naming-original-desc">Keep original name</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="gps"><div><div class="label" id="naming-gps">GPS Coordinates</div><div class="desc" id="naming-gps-desc">38.93_121.60_001.jpg</div></div></label>
-          <label class="option"><input type="radio" name="naming-rule-modal" value="custom"><div><div class="label" id="naming-custom">Custom Prefix</div><div class="desc" id="naming-custom-desc">Enter custom text</div></div></label>
-        </div>
-        <input type="text" id="custom-prefix-modal" class="custom-input" placeholder="Enter custom prefix">
-        <div class="buttons"><button class="btn-cancel" id="naming-cancel">Cancel</button><button class="btn-confirm" id="naming-confirm">Annotate</button></div>
-      </div>
-    </div>
-
-    <div id="loading-overlay" class="loading-overlay">
-      <div class="loading-content"><div class="loading-spinner"></div><div class="loading-text" id="loading-text">Processing images...</div><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div></div>
-    </div>
-
-    <div id="toast" class="toast"><span class="icon">✓</span><span class="text" id="toast-text">Processing complete!</span></div>
-    
-    <div id="debug-panel" class="debug-panel">
-      <h4>Debug Log</h4>
-      <div id="debug-log"></div>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script>
-    const translations = {
-      en: {
-        'nav-features': 'Features',
-        'nav-pricing': 'Pricing',
-        'nav-desktop': 'Desktop',
-        'nav-started': 'Get Started',
-        'panel-upload': 'Upload Images',
-        'upload-title': 'Drop images here',
-        'upload-desc': 'or click to browse',
-        'empty-preview-text': 'No images selected',
-        'btn-annotate': 'Annotate Images',
-        'btn-download-all': 'Download All',
-        'privacy-text': 'Your images are processed locally',
-        'instructions-title': 'How It Works',
-        'step1-title': 'Upload Images',
-        'step1-desc': 'Drag or click to upload photos with GPS data',
-        'step2-title': 'Choose Naming',
-        'step2-desc': 'Select your preferred file naming convention',
-        'step3-title': 'Download',
-        'step3-desc': 'Get your geotagged images with location overlays',
-        'comparison-title': 'Before & After',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Annotated',
-        'results-title': 'Annotated Images',
-        'pricing-title': 'Subscription',
-        'pricing-price': '$7.99',
-        'pricing-period': 'per month',
-        'pricing-feature1': 'Unlimited image processing',
-        'pricing-feature2': 'HD quality output',
-        'pricing-feature3': 'Batch processing support',
-        'pricing-feature4': 'Priority support',
-        'pricing-btn': 'Subscribe Now',
-        'desktop-title': 'Desktop App',
-        'desktop-subtitle': 'Coming Soon',
-        'desktop-desc': 'Offline processing for faster and more secure workflow',
-        'desktop-badge': 'Stay tuned',
-        'naming-title': 'File Naming',
-        'naming-date': 'Date_Serial',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Original Filename',
-        'naming-original-desc': 'Keep original name',
-        'naming-gps': 'GPS Coordinates',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Custom Prefix',
-        'naming-custom-desc': 'Enter custom text',
-        'naming-cancel': 'Cancel',
-        'naming-confirm': 'Annotate',
-        'loading-text': 'Processing images...',
-        'toast-success': 'Processing complete!'
-      },
-      zh: {
-        'nav-features': '功能',
-        'nav-pricing': '價格',
-        'nav-desktop': '桌面版',
-        'nav-started': '開始使用',
-        'panel-upload': '上傳圖片',
-        'upload-title': '拖曳圖片到這裡',
-        'upload-desc': '或點擊選擇檔案',
-        'empty-preview-text': '請選擇圖片',
-        'btn-annotate': '開始標註',
-        'btn-download-all': '下載全部',
-        'privacy-text': '圖片僅在瀏覽器處理',
-        'instructions-title': '使用方法',
-        'step1-title': '上傳圖片',
-        'step1-desc': '拖曳或點擊上傳包含GPS資訊的照片',
-        'step2-title': '選擇命名',
-        'step2-desc': '選擇您喜歡的檔案命名方式',
-        'step3-title': '下載',
-        'step3-desc': '取得帶地理位置標註的圖片',
-        'comparison-title': '效果對比',
-        'comparison-original': '原圖',
-        'comparison-annotated': '標註後',
-        'results-title': '已標註圖片',
-        'pricing-title': '訂閱服務',
-        'pricing-price': '$7.99',
-        'pricing-period': '每月',
-        'pricing-feature1': '無限圖片處理',
-        'pricing-feature2': '高品質圖片輸出',
-        'pricing-feature3': '批次處理支援',
-        'pricing-feature4': '優先技術支援',
-        'pricing-btn': '立即訂閱',
-        'desktop-title': '桌面應用',
-        'desktop-subtitle': '即將推出',
-        'desktop-desc': '離線處理，更快更安全',
-        'desktop-badge': '敬請期待',
-        'naming-title': '選擇命名規則',
-        'naming-date': '日期_序號',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': '原檔名',
-        'naming-original-desc': '保持原始檔名不變',
-        'naming-gps': 'GPS座標',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': '自訂前綴',
-        'naming-custom-desc': '輸入自訂文字',
-        'naming-cancel': '取消',
-        'naming-confirm': '確認',
-        'loading-text': '正在處理圖片...',
-        'toast-success': '處理完成！'
-      },
-      fr: {
-        'nav-features': 'Fonctionnalités',
-        'nav-pricing': 'Tarifs',
-        'nav-desktop': 'Bureau',
-        'nav-started': 'Commencer',
-        'panel-upload': 'Télécharger des images',
-        'upload-title': 'Déposez les images ici',
-        'upload-desc': 'ou cliquez pour parcourir',
-        'empty-preview-text': 'Aucune image sélectionnée',
-        'btn-annotate': 'Annoter les images',
-        'btn-download-all': 'Tout télécharger',
-        'privacy-text': 'Vos images sont traitées localement',
-        'instructions-title': 'Comment ça marche',
-        'step1-title': 'Télécharger des images',
-        'step1-desc': 'Glissez ou cliquez pour télécharger',
-        'step2-title': 'Choisir le nom',
-        'step2-desc': 'Sélectionnez votre convention',
-        'step3-title': 'Télécharger',
-        'step3-desc': 'Obtenez vos images géotagées',
-        'comparison-title': 'Avant / Après',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Annoté',
-        'results-title': 'Images annotées',
-        'pricing-title': 'Abonnement',
-        'pricing-price': '7,99 $',
-        'pricing-period': 'par mois',
-        'pricing-feature1': 'Traitement illimité',
-        'pricing-feature2': 'Sortie HD',
-        'pricing-feature3': 'Traitement par lots',
-        'pricing-feature4': 'Support prioritaire',
-        'pricing-btn': 'S\'abonner',
-        'desktop-title': 'Application de bureau',
-        'desktop-subtitle': 'Bientôt disponible',
-        'desktop-desc': 'Traitement hors ligne',
-        'desktop-badge': 'À venir',
-        'naming-title': 'Nom de fichier',
-        'naming-date': 'Date_Série',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Nom original',
-        'naming-original-desc': 'Conserver le nom',
-        'naming-gps': 'Coordonnées GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Préfixe personnalisé',
-        'naming-custom-desc': 'Entrez du texte',
-        'naming-cancel': 'Annuler',
-        'naming-confirm': 'Annoter',
-        'loading-text': 'Traitement...',
-        'toast-success': 'Terminé!'
-      },
-      es: {
-        'nav-features': 'Características',
-        'nav-pricing': 'Precios',
-        'nav-desktop': 'Escritorio',
-        'nav-started': 'Empezar',
-        'panel-upload': 'Subir imágenes',
-        'upload-title': 'Arrastra imágenes aquí',
-        'upload-desc': 'o haz clic para buscar',
-        'empty-preview-text': 'No hay imágenes',
-        'btn-annotate': 'Anotar imágenes',
-        'btn-download-all': 'Descargar todo',
-        'privacy-text': 'Procesamiento local',
-        'instructions-title': 'Cómo funciona',
-        'step1-title': 'Subir imágenes',
-        'step1-desc': 'Arrastra o haz clic',
-        'step2-title': 'Elegir nombre',
-        'step2-desc': 'Seleccione su convención',
-        'step3-title': 'Descargar',
-        'step3-desc': 'Obtenga imágenes geotaggeadas',
-        'comparison-title': 'Antes / Después',
-        'comparison-original': 'Original',
-        'comparison-annotated': 'Anotado',
-        'results-title': 'Imágenes anotadas',
-        'pricing-title': 'Suscripción',
-        'pricing-price': '$7,99',
-        'pricing-period': 'por mes',
-        'pricing-feature1': 'Procesamiento ilimitado',
-        'pricing-feature2': 'Salida HD',
-        'pricing-feature3': 'Procesamiento por lotes',
-        'pricing-feature4': 'Soporte prioritario',
-        'pricing-btn': 'Suscribirse',
-        'desktop-title': 'Aplicación de escritorio',
-        'desktop-subtitle': 'Próximamente',
-        'desktop-desc': 'Procesamiento sin conexión',
-        'desktop-badge': 'Próximamente',
-        'naming-title': 'Nombre de archivo',
-        'naming-date': 'Fecha_Serie',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Nombre original',
-        'naming-original-desc': 'Mantener nombre',
-        'naming-gps': 'Coordenadas GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Prefijo personalizado',
-        'naming-custom-desc': 'Ingrese texto',
-        'naming-cancel': 'Cancelar',
-        'naming-confirm': 'Anotar',
-        'loading-text': 'Procesando...',
-        'toast-success': '¡Completado!'
-      },
-      ru: {
-        'nav-features': 'Функции',
-        'nav-pricing': 'Цены',
-        'nav-desktop': 'Десктоп',
-        'nav-started': 'Начать',
-        'panel-upload': 'Загрузить изображения',
-        'upload-title': 'Перетащите изображения',
-        'upload-desc': 'или нажмите для выбора',
-        'empty-preview-text': 'Изображения не выбраны',
-        'btn-annotate': 'Аннотировать',
-        'btn-download-all': 'Скачать все',
-        'privacy-text': 'Локальная обработка',
-        'instructions-title': 'Как это работает',
-        'step1-title': 'Загрузить изображения',
-        'step1-desc': 'Перетащите или нажмите',
-        'step2-title': 'Выбрать именование',
-        'step2-desc': 'Выберите схему именования',
-        'step3-title': 'Скачать',
-        'step3-desc': 'Получите геотеггированные изображения',
-        'comparison-title': 'До / После',
-        'comparison-original': 'Оригинал',
-        'comparison-annotated': 'Аннотирован',
-        'results-title': 'Аннотированные изображения',
-        'pricing-title': 'Подписка',
-        'pricing-price': '7,99 $',
-        'pricing-period': 'в месяц',
-        'pricing-feature1': 'Безлимитная обработка',
-        'pricing-feature2': 'Выход HD',
-        'pricing-feature3': 'Пакетная обработка',
-        'pricing-feature4': 'Приоритетная поддержка',
-        'pricing-btn': 'Подписаться',
-        'desktop-title': 'Десктопное приложение',
-        'desktop-subtitle': 'Скоро',
-        'desktop-desc': 'Оффлайн-обработка',
-        'desktop-badge': 'Скоро',
-        'naming-title': 'Именование файла',
-        'naming-date': 'Дата_Номер',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'Имя файла',
-        'naming-original-desc': 'Сохранить имя',
-        'naming-gps': 'GPS-координаты',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'Пользовательский префикс',
-        'naming-custom-desc': 'Введите текст',
-        'naming-cancel': 'Отмена',
-        'naming-confirm': 'Аннотировать',
-        'loading-text': 'Обработка...',
-        'toast-success': 'Готово!'
-      },
-      ar: {
-        'nav-features': 'الميزات',
-        'nav-pricing': 'الأسعار',
-        'nav-desktop': 'سطح المكتب',
-        'nav-started': 'ابدأ',
-        'panel-upload': 'رفع الصور',
-        'upload-title': 'اسحب الصور إلى هنا',
-        'upload-desc': 'أو اضغط للتصفح',
-        'empty-preview-text': 'لم تُختار صوراً',
-        'btn-annotate': 'تعليق الصور',
-        'btn-download-all': 'تنزيل الكل',
-        'privacy-text': 'معالجة محلية',
-        'instructions-title': 'كيف يعمل',
-        'step1-title': 'رفع الصور',
-        'step1-desc': 'اسحب أو اضغط',
-        'step2-title': 'اختر التسمية',
-        'step2-desc': 'حدد تقنية التسمية',
-        'step3-title': 'تنزيل',
-        'step3-desc': 'احصل على الصور الموسومة',
-        'comparison-title': 'قبل / بعد',
-        'comparison-original': 'الأصل',
-        'comparison-annotated': 'مُعليق',
-        'results-title': 'الصور المُعليقة',
-        'pricing-title': 'الاشتراك',
-        'pricing-price': '7.99 دولار',
-        'pricing-period': 'في الشهر',
-        'pricing-feature1': 'معالجة غير مقيدة',
-        'pricing-feature2': 'إخراج HD',
-        'pricing-feature3': 'معالجة المجمعة',
-        'pricing-feature4': 'دعم أولي',
-        'pricing-btn': 'اشترك الآن',
-        'desktop-title': 'تطبيق سطح المكتب',
-        'desktop-subtitle': 'قريباً',
-        'desktop-desc': 'معالجة دون اتصال',
-        'desktop-badge': 'قريباً',
-        'naming-title': 'تسمية الملف',
-        'naming-date': 'التاريخ_الرقم',
-        'naming-date-desc': '20240115_001.jpg',
-        'naming-original': 'اسم الملف الأصلي',
-        'naming-original-desc': 'احفظ الاسم',
-        'naming-gps': 'إحداثيات GPS',
-        'naming-gps-desc': '38.93_121.60_001.jpg',
-        'naming-custom': 'البادئة المخصصة',
-        'naming-custom-desc': 'أدخل نصًا',
-        'naming-cancel': 'إلغاء',
-        'naming-confirm': 'تعليق',
-        'loading-text': 'جارٍ المعالجة...',
-        'toast-success': 'اكتمل!'
-      }
-    };
-
-    let currentLang = 'en';
-    let selectedFiles = [];
-    let processedImages = [];
-    let currentNamingRule = 'date';
-    let currentCustomPrefix = '';
-    let showDebug = false;
 
     const geocodeCache = new Map();
-    const geocodeQueue = [];
-    let isProcessingQueue = false;
-    const RATE_LIMIT_MS = 1100;
-
-    function debugLog(message) {
-      const logDiv = document.getElementById('debug-log');
-      if (!logDiv) return;
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      const time = new Date().toLocaleTimeString();
-      entry.textContent = `[${time}] ${message}`;
-      logDiv.appendChild(entry);
-      logDiv.scrollTop = logDiv.scrollHeight;
-      console.log(message);
-    }
-
-    function toggleDebugPanel() {
-      showDebug = !showDebug;
-      const panel = document.getElementById('debug-panel');
-      if (panel) {
-        if (showDebug) panel.classList.add('show');
-        else panel.classList.remove('show');
-      }
-    }
-
-    function toggleLangDropdown() {
-      const dropdown = document.getElementById('lang-dropdown');
-      if (dropdown) dropdown.classList.toggle('show');
-    }
-
-    function setLanguage(lang) {
-      currentLang = lang;
-      const trans = translations[lang];
-      const flags = { 'en': '🇺🇸', 'zh': '🇹🇼', 'fr': '🇫🇷', 'es': '🇪🇸', 'ru': '🇷🇺', 'ar': '🇸🇦' };
-      const codes = { 'en': 'EN', 'zh': '中文', 'fr': 'FR', 'es': 'ES', 'ru': 'RU', 'ar': 'AR' };
-      const flagEl = document.getElementById('lang-flag');
-      const codeEl = document.getElementById('lang-code');
-      const dropdown = document.getElementById('lang-dropdown');
+    
+    async function tryGeocodingService(url, params, timeout = 15000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
       
-      if (flagEl) flagEl.textContent = flags[lang];
-      if (codeEl) codeEl.textContent = codes[lang];
-      if (dropdown) dropdown.classList.remove('show');
-      
-      Object.keys(trans).forEach(key => {
-        const el = document.getElementById(key);
-        if (el) el.textContent = trans[key];
-      });
-      
-      const toastText = document.getElementById('toast-text');
-      const loadingText = document.getElementById('loading-text');
-      if (toastText) toastText.textContent = trans['toast-success'];
-      if (loadingText) loadingText.textContent = trans['loading-text'];
-      
-      document.documentElement.lang = lang;
-      document.body.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
-    }
-
-    function handleFileSelect(e) { 
-      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
-      if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
-        showToast(`Free users can only process ${MAX_FREE_IMAGES} image at a time. Subscribe for unlimited batch processing.`);
-        return;
-      }
-      if (!isSubscriber) {
-        selectedFiles = files.slice(0, MAX_FREE_IMAGES);
-      } else {
-        selectedFiles = files;
-      }
-      updatePreview(); 
-    }
-
-    function handleDrop(e) { 
-      e.preventDefault(); 
-      e.currentTarget.classList.remove('active'); 
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); 
-      if (files.length > 0) { 
-        selectedFiles = [...selectedFiles, ...files]; 
-        updatePreview(); 
-      } 
-    }
-
-    function updatePreview() {
-      const preview = document.getElementById('preview-container');
-      const emptyPreview = document.getElementById('empty-preview');
-      const processBtn = document.getElementById('process-btn');
-      const downloadBtn = document.getElementById('download-all-btn');
-
-      if (!preview || !emptyPreview || !processBtn || !downloadBtn) return;
-
-      if (selectedFiles.length > 0) {
-        preview.style.display = 'grid'; 
-        emptyPreview.style.display = 'none';
-        processBtn.disabled = false; 
-        downloadBtn.disabled = true;
-        preview.innerHTML = '';
-        selectedFiles.slice(0, 6).forEach((file, i) => {
-          const item = document.createElement('div'); 
-          item.className = 'preview-item';
-          const img = document.createElement('img'); 
-          img.src = URL.createObjectURL(file);
-          const filename = document.createElement('span'); 
-          filename.className = 'filename'; 
-          filename.textContent = file.name;
-          item.appendChild(img); 
-          item.appendChild(filename); 
-          preview.appendChild(item);
-        });
-        if (selectedFiles.length > 6) {
-          const more = document.createElement('div'); 
-          more.className = 'preview-item';
-          more.style.display = 'flex'; 
-          more.style.alignItems = 'center'; 
-          more.style.justifyContent = 'center'; 
-          more.style.color = '#71717a';
-          more.textContent = `+${selectedFiles.length - 6}`; 
-          preview.appendChild(more);
-        }
-      } else { 
-        preview.style.display = 'none'; 
-        emptyPreview.style.display = 'block'; 
-        processBtn.disabled = true; 
-        downloadBtn.disabled = true; 
-      }
-    }
-
-    function showNamingModal() { 
-      const overlay = document.getElementById('naming-modal-overlay');
-      if (overlay) overlay.classList.add('show'); 
-    }
-
-    function hideNamingModal() { 
-      const overlay = document.getElementById('naming-modal-overlay');
-      if (overlay) overlay.classList.remove('show'); 
-    }
-
-    function confirmNaming() {
-      const checked = document.querySelector('input[name="naming-rule-modal"]:checked');
-      const customInput = document.getElementById('custom-prefix-modal');
-      
-      if (checked) currentNamingRule = checked.value;
-      if (customInput) currentCustomPrefix = customInput.value.trim();
-      
-      hideNamingModal(); 
-      processImages();
-    }
-
-    async function extractExif(file) {
       try {
-        debugLog(`Processing file: ${file.name} (${file.size} bytes)`);
-        const buffer = await file.arrayBuffer();
-        const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
-        const dataView = new DataView(buffer);
+        const response = await fetch(url + new URLSearchParams(params), {
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+        clearTimeout(timeoutId);
         
-        if (dataView.getUint16(0) !== 0xFFD8) {
-          debugLog('Not a JPEG file');
-          return result;
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+      } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+      }
+    }
+    
+    async function reverseGeocode(lat, lng) {
+      const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      debugLog(`Reverse geocoding: ${cacheKey}`, 'info');
+      
+      if (geocodeCache.has(cacheKey)) {
+        const cached = geocodeCache.get(cacheKey);
+        if (cached && !cached.startsWith(lat.toFixed(4))) {
+          debugLog('Using cached address result', 'success');
+          return cached;
+        }
+      }
+
+      updateLoadingStatus(`正在获取地址: ${lat.toFixed(4)}, ${lng.toFixed(4)}...`);
+      
+      const services = [
+        {
+          name: 'OpenStreetMap CN',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 18, addressdetails: 1, 'accept-language': 'zh-CN,zh' },
+          extract: (data) => {
+            if (data.display_name) return data.display_name;
+            if (data.address) {
+              const parts = [];
+              if (data.address.house_number) parts.push(data.address.house_number);
+              if (data.address.road) parts.push(data.address.road);
+              if (data.address.suburb) parts.push(data.address.suburb);
+              if (data.address.city) parts.push(data.address.city);
+              if (data.address.state) parts.push(data.address.state);
+              if (data.address.country) parts.push(data.address.country);
+              return parts.filter(Boolean).join(' ');
+            }
+            return null;
+          }
+        },
+        {
+          name: 'OpenStreetMap Alt',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 16, addressdetails: 1 },
+          extract: (data) => data.display_name || null
+        },
+        {
+          name: 'OpenStreetMap Basic',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 14, addressdetails: 0 },
+          extract: (data) => data.display_name || null
+        }
+      ];
+
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        debugLog(`Trying ${service.name} service...`, 'info');
+        
+        try {
+          const response = await tryGeocodingService(service.url, service.params);
+          const placeName = service.extract(response);
+          
+          if (placeName && placeName.trim()) {
+            geocodeCache.set(cacheKey, placeName);
+            debugLog(`${service.name} success: ${placeName.substring(0, 60)}`, 'success');
+            return placeName;
+          }
+        } catch (e) {
+          debugLog(`${service.name} failed: ${e.message}`, 'error');
+        }
+      }
+
+      const fallbackName = formatAddressFromCoords(lat, lng);
+      debugLog(`All services failed, using fallback: ${fallbackName}`, 'error');
+      return fallbackName;
+    }
+    
+    function formatAddressFromCoords(lat, lng) {
+      let address = '';
+      
+      if (lng >= 73.5 && lng <= 135 && lat >= 18 && lat <= 53) {
+        const regions = [
+          { name: '北京', minLat: 39.4, maxLat: 41.1, minLng: 115.4, maxLng: 117.5 },
+          { name: '上海', minLat: 30.5, maxLat: 31.8, minLng: 120.8, maxLng: 122.2 },
+          { name: '广州', minLat: 22.5, maxLat: 23.5, minLng: 112.5, maxLng: 114.5 },
+          { name: '深圳', minLat: 22.4, maxLat: 22.8, minLng: 113.7, maxLng: 114.3 },
+          { name: '杭州', minLat: 30.0, maxLat: 30.5, minLng: 120.0, maxLng: 120.4 },
+          { name: '成都', minLat: 30.4, maxLat: 31.2, minLng: 103.5, maxLng: 104.2 },
+          { name: '重庆', minLat: 29.1, maxLat: 30.4, minLng: 105.5, maxLng: 107.0 },
+          { name: '天津', minLat: 38.5, maxLat: 39.3, minLng: 116.7, maxLng: 117.5 },
+          { name: '南京', minLat: 31.5, maxLat: 32.2, minLng: 118.3, maxLng: 119.2 },
+          { name: '武汉', minLat: 30.3, maxLat: 30.8, minLng: 114.0, maxLng: 114.6 },
+          { name: '西安', minLat: 33.4, maxLat: 34.0, minLng: 108.7, maxLng: 109.3 },
+          { name: '青岛', minLat: 35.9, maxLat: 36.3, minLng: 120.2, maxLng: 120.5 },
+          { name: '大连', minLat: 38.7, maxLat: 39.5, minLng: 121.0, maxLng: 122.0 },
+          { name: '金州', minLat: 39.0, maxLat: 39.2, minLng: 121.6, maxLng: 121.9 },
+          { name: '沈阳', minLat: 41.6, maxLat: 42.0, minLng: 123.0, maxLng: 123.8 },
+          { name: '苏州', minLat: 31.2, maxLat: 31.4, minLng: 120.5, maxLng: 120.7 },
+          { name: '郑州', minLat: 34.6, maxLat: 34.9, minLng: 113.5, maxLng: 113.8 },
+          { name: '长沙', minLat: 28.0, maxLat: 28.3, minLng: 112.8, maxLng: 113.1 },
+          { name: '哈尔滨', minLat: 45.7, maxLat: 45.9, minLng: 126.5, maxLng: 126.7 },
+          { name: '合肥', minLat: 31.7, maxLat: 31.9, minLng: 117.1, maxLng: 117.3 },
+          { name: '福州', minLat: 26.0, maxLat: 26.1, minLng: 119.2, maxLng: 119.4 },
+          { name: '厦门', minLat: 24.4, maxLat: 24.5, minLng: 118.1, maxLng: 118.2 },
+          { name: '昆明', minLat: 24.9, maxLat: 25.1, minLng: 102.6, maxLng: 102.8 },
+          { name: '贵阳', minLat: 26.5, maxLat: 26.7, minLng: 106.7, maxLng: 106.9 },
+          { name: '南宁', minLat: 22.8, maxLat: 23.0, minLng: 108.2, maxLng: 108.4 },
+          { name: '石家庄', minLat: 38.0, maxLat: 38.1, minLng: 114.4, maxLng: 114.6 },
+          { name: '太原', minLat: 37.8, maxLat: 37.9, minLng: 112.5, maxLng: 112.6 },
+          { name: '呼和浩特', minLat: 40.8, maxLat: 40.9, minLng: 111.6, maxLng: 111.8 },
+          { name: '银川', minLat: 38.4, maxLat: 38.5, minLng: 106.2, maxLng: 106.3 },
+          { name: '兰州', minLat: 36.0, maxLat: 36.1, minLng: 103.8, maxLng: 103.9 },
+          { name: '西宁', minLat: 36.6, maxLat: 36.7, minLng: 101.7, maxLng: 101.8 },
+          { name: '乌鲁木齐', minLat: 43.8, maxLat: 43.9, minLng: 87.6, maxLng: 87.7 },
+          { name: '海口', minLat: 20.0, maxLat: 20.1, minLng: 110.3, maxLng: 110.4 },
+          { name: '三亚', minLat: 18.2, maxLat: 18.3, minLng: 109.5, maxLng: 109.6 },
+          { name: '鞍山', minLat: 40.8, maxLat: 41.2, minLng: 122.5, maxLng: 123.0 },
+          { name: '抚顺', minLat: 41.6, maxLat: 41.9, minLng: 123.5, maxLng: 124.2 },
+          { name: '本溪', minLat: 41.0, maxLat: 41.5, minLng: 123.5, maxLng: 124.5 },
+          { name: '丹东', minLat: 39.9, maxLat: 40.5, minLng: 124.0, maxLng: 124.5 },
+          { name: '锦州', minLat: 41.0, maxLat: 41.3, minLng: 120.8, maxLng: 121.5 },
+          { name: '营口', minLat: 40.2, maxLat: 40.7, minLng: 121.8, maxLng: 122.3 },
+          { name: '盘锦', minLat: 40.9, maxLat: 41.2, minLng: 121.5, maxLng: 122.2 },
+          { name: '铁岭', minLat: 42.0, maxLat: 42.5, minLng: 123.5, maxLng: 124.5 },
+          { name: '朝阳', minLat: 41.2, maxLat: 41.8, minLng: 119.5, maxLng: 120.5 },
+          { name: '葫芦岛', minLat: 40.3, maxLat: 41.0, minLng: 119.5, maxLng: 120.8 },
+          { name: '长春', minLat: 43.5, maxLat: 44.0, minLng: 125.0, maxLng: 125.8 },
+          { name: '吉林', minLat: 43.5, maxLat: 44.0, minLng: 126.3, maxLng: 127.0 },
+          { name: '济南', minLat: 36.4, maxLat: 36.8, minLng: 116.8, maxLng: 117.2 },
+          { name: '烟台', minLat: 37.2, maxLat: 37.8, minLng: 121.0, maxLng: 121.8 },
+          { name: '宁波', minLat: 29.8, maxLat: 30.0, minLng: 121.3, maxLng: 121.8 },
+          { name: '温州', minLat: 27.8, maxLat: 28.2, minLng: 120.4, maxLng: 121.0 },
+          { name: '无锡', minLat: 31.3, maxLat: 31.6, minLng: 120.0, maxLng: 120.5 },
+          { name: '佛山', minLat: 22.8, maxLat: 23.2, minLng: 112.8, maxLng: 113.2 },
+          { name: '珠海', minLat: 22.0, maxLat: 22.4, minLng: 113.2, maxLng: 113.8 },
+          { name: '东莞', minLat: 22.8, maxLat: 23.2, minLng: 113.5, maxLng: 114.0 },
+          { name: '中山', minLat: 22.4, maxLat: 22.8, minLng: 113.2, maxLng: 113.6 },
+        ];
+        
+        for (const region of regions) {
+          if (lat >= region.minLat && lat <= region.maxLat && lng >= region.minLng && lng <= region.maxLng) {
+            address = region.name + ' 附近';
+            break;
+          }
         }
         
-        let offset = 2;
-        while (offset < buffer.byteLength - 2) {
-          const marker = dataView.getUint16(offset);
+        if (!address) {
+          const provinces = [
+            { name: '黑龙江', minLat: 43, maxLat: 53, minLng: 121, maxLng: 135 },
+            { name: '吉林', minLat: 41, maxLat: 46, minLng: 121, maxLng: 131 },
+            { name: '辽宁', minLat: 38, maxLat: 43, minLng: 118, maxLng: 126 },
+            { name: '河北', minLat: 36, maxLat: 42, minLng: 113, maxLng: 119 },
+            { name: '河南', minLat: 31, maxLat: 36, minLng: 110, maxLng: 116 },
+            { name: '山东', minLat: 34, maxLat: 38, minLng: 114, maxLng: 123 },
+            { name: '山西', minLat: 34, maxLat: 40, minLng: 110, maxLng: 114 },
+            { name: '陕西', minLat: 31, maxLat: 39, minLng: 105, maxLng: 111 },
+            { name: '甘肃', minLat: 32, maxLat: 43, minLng: 92, maxLng: 109 },
+            { name: '青海', minLat: 31, maxLat: 39, minLng: 90, maxLng: 103 },
+            { name: '四川', minLat: 26, maxLat: 34, minLng: 97, maxLng: 109 },
+            { name: '云南', minLat: 21, maxLat: 29, minLng: 97, maxLng: 106 },
+            { name: '贵州', minLat: 24, maxLat: 29, minLng: 103, maxLng: 109 },
+            { name: '湖北', minLat: 29, maxLat: 33, minLng: 108, maxLng: 116 },
+            { name: '湖南', minLat: 24, maxLat: 30, minLng: 108, maxLng: 114 },
+            { name: '江西', minLat: 24, maxLat: 30, minLng: 113, maxLng: 118 },
+            { name: '安徽', minLat: 29, maxLat: 34, minLng: 114, maxLng: 119 },
+            { name: '浙江', minLat: 27, maxLat: 31, minLng: 118, maxLng: 123 },
+            { name: '福建', minLat: 23, maxLat: 28, minLng: 115, maxLng: 120 },
+            { name: '广东', minLat: 20, maxLat: 25, minLng: 109, maxLng: 118 },
+            { name: '广西', minLat: 20, maxLat: 26, minLng: 104, maxLng: 112 },
+            { name: '海南', minLat: 18, maxLat: 20, minLng: 108, maxLng: 111 },
+            { name: '内蒙古', minLat: 37, maxLat: 54, minLng: 97, maxLng: 126 },
+            { name: '新疆', minLat: 34, maxLat: 49, minLng: 73, maxLng: 96 },
+            { name: '西藏', minLat: 26, maxLat: 36, minLng: 78, maxLng: 99 },
+            { name: '宁夏', minLat: 35, maxLat: 39, minLng: 104, maxLng: 107 },
+            { name: '江苏', minLat: 30, maxLat: 35, minLng: 116, maxLng: 122 },
+            { name: '上海', minLat: 30, maxLat: 32, minLng: 120, maxLng: 122 },
+            { name: '北京', minLat: 39, maxLat: 41, minLng: 115, maxLng: 118 },
+            { name: '天津', minLat: 38, maxLat: 40, minLng: 116, maxLng: 118 },
+            { name: '重庆', minLat: 28, maxLat: 32, minLng: 105, maxLng: 110 },
+          ];
           
-          if (marker === 0xFFE1) {
-            const length = dataView.getUint16(offset + 2);
-            const exifOffset = offset + 4;
-            if (dataView.getUint32(exifOffset) === 0x45786966) {
-              debugLog('Found EXIF header');
-              const tiffOffset = exifOffset + 6;
-              const byteOrder = dataView.getUint16(tiffOffset);
-              const isLittleEndian = byteOrder === 0x4949;
-              
-              const tiffMarker = dataView.getUint16(tiffOffset + 2, isLittleEndian);
-              
-              if (tiffMarker === 0x002A) {
-                const firstIfdOffset = dataView.getUint32(tiffOffset + 4, isLittleEndian) + tiffOffset;
-                const exifData = parseTiffIfd(dataView, tiffOffset, firstIfdOffset, isLittleEndian);
-                if (exifData) {
-                  result.hasExif = true; 
-                  result.timestamp = exifData.timestamp;
-                  if (exifData.gpsLatitude !== undefined && exifData.gpsLongitude !== undefined) {
-                    const lat = exifData.gpsLatitude;
-                    const lng = exifData.gpsLongitude;
-                    debugLog(`GPS Coords found: ${lat}, ${lng}`);
-                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                      result.gps = { lat, lng }; 
-                      result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                    }
-                  }
-                }
-              }
+          for (const province of provinces) {
+            if (lat >= province.minLat && lat <= province.maxLat && lng >= province.minLng && lng <= province.maxLng) {
+              address = province.name + ' 境内';
               break;
             }
           }
-          offset += dataView.getUint16(offset + 2) + 2;
         }
-        return result;
-      } catch (e) {
-        debugLog(`EXIF error: ${e.message}`);
-        return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
       }
-    }
-
-    function parseTiffIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-
-        if (tag === 0x0132) result.timestamp = readString(dataView, valueOffset, count);
-        else if (tag === 0x8769) {
-          const exifIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseTiffIfd(dataView, tiffOffset, exifIfdOffset, isLittleEndian));
-        } else if (tag === 0x8825) {
-          const gpsIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseGpsIfd(dataView, tiffOffset, gpsIfdOffset, isLittleEndian));
-        }
-        entryOffset += 12;
+      
+      if (!address) {
+        address = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
       }
-
-      const nextIfd = dataView.getUint32(entryOffset, isLittleEndian);
-      if (nextIfd !== 0) Object.assign(result, parseTiffIfd(dataView, tiffOffset, nextIfd + tiffOffset, isLittleEndian));
-      return result;
+      
+      return address;
     }
 
-    function parseGpsIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-
-      let latRef, lonRef, latDegNum, latDegDen, latMinNum, latMinDen, latSecNum, latSecDen;
-      let lonDegNum, lonDegDen, lonMinNum, lonMinDen, lonSecNum, lonSecDen;
-
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-
-        switch (tag) {
-          case 0x0001: latRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0002: if (format === 5 && count === 3) {
-            latDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
-            latDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-            latMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
-            latMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-            latSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
-            latSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-          } break;
-          case 0x0003: lonRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0004: if (format === 5 && count === 3) {
-            lonDegNum = dataView.getUint32(valueOffset, isLittleEndian); 
-            lonDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-            lonMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian); 
-            lonMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-            lonSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian); 
-            lonSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-          } break;
-        }
-        entryOffset += 12;
-      }
-
-      if (latDegNum !== undefined) {
-        const latDeg = latDegNum / latDegDen;
-        const latMin = latMinNum / latMinDen;
-        const latSec = latSecNum / latSecDen;
-        let lat = latDeg + latMin/60 + latSec/3600;
-        if (latRef === 'S') lat = -lat;
-        result.gpsLatitude = lat;
-      }
-
-      if (lonDegNum !== undefined) {
-        const lonDeg = lonDegNum / lonDegDen;
-        const lonMin = lonMinNum / lonMinDen;
-        const lonSec = lonSecNum / lonSecDen;
-        let lon = lonDeg + lonMin/60 + lonSec/3600;
-        if (lonRef === 'W') lon = -lon;
-        result.gpsLongitude = lon;
-      }
-      debugLog(`Parsed GPS: ${result.gpsLatitude}, ${result.gpsLongitude}`);
-      return result;
-    }
-
-    function getFormatSize(format) { 
-      switch (format) { 
-        case 1: return 1; 
-        case 2: return 1; 
-        case 3: return 2; 
-        case 4: return 4; 
-        case 5: return 8; 
-        case 7: return 1; 
-        default: return 1; 
-      } 
-    }
-    
-    function readString(dataView, offset, length) { 
-      let str = ''; 
-      for (let i = 0; i < length; i++) { 
-        const char = dataView.getUint8(offset + i); 
-        if (char === 0) break; 
-        str += String.fromCharCode(char); 
-      } 
-      return str; 
-    }
-
-    function getCacheKey(lat, lng) {
-      return `${lat.toFixed(5)}_${lng.toFixed(5)}`;
-    }
-
-    function getCachedResult(lat, lng) {
-      const key = getCacheKey(lat, lng);
-      const cached = localStorage.getItem(`geocode_cache_${key}`);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.expires > Date.now()) return parsed.address;
-        } catch {}
-      }
-      return null;
-    }
-
-    function setCachedResult(lat, lng, address) {
-      const key = getCacheKey(lat, lng);
-      const cacheEntry = { address, expires: Date.now() + 7 * 24 * 60 * 60 * 1000 };
-      localStorage.setItem(`geocode_cache_${key}`, JSON.stringify(cacheEntry));
-      geocodeCache.set(key, address);
-    }
-
-    async function processQueue() {
-      if (isProcessingQueue || geocodeQueue.length === 0) return;
-      isProcessingQueue = true;
-
-      while (geocodeQueue.length > 0) {
-        const { lat, lng, resolve } = geocodeQueue.shift();
-        const cached = getCachedResult(lat, lng);
-        if (cached) { 
-          debugLog(`Using cached address: ${cached}`); 
-          resolve(cached); 
-          await sleep(RATE_LIMIT_MS / 3); 
-          continue; 
-        }
-
-        try {
-          debugLog(`Calling Nominatim API for ${lat}, ${lng}`);
-          debugLog(`API URL: https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-          const controller = new AbortController();
-          const timeout = setTimeout(() => {
-            debugLog('Nominatim API timeout - aborting request');
-            controller.abort();
-          }, 15000); // Increased to 15 seconds
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-            { 
-              headers: { 'User-Agent': 'GeoStamp/1.0 (contact@geostamp.app)' },
-              signal: controller.signal
-            }
-          );
-          clearTimeout(timeout);
-
-          debugLog(`Nominatim response status: ${res.status}`);
-          if (res.ok) {
-            const data = await res.json();
-            debugLog(`Nominatim response: ${JSON.stringify(data)}`);
-            const address = data.display_name 
-              ? (data.display_name.split(', ').length >= 3 
-                  ? data.display_name.split(', ').slice(0, 3).join(', ') 
-                  : data.display_name)
-              : null;
-            if (address) { 
-              setCachedResult(lat, lng, address);
-              debugLog(`Resolved address: ${address}`);
-            } else {
-              debugLog('No address in response');
-            }
-            resolve(address);
-          } else {
-            debugLog(`Nominatim API failed with status: ${res.status}`);
-            resolve(null); 
-          }
-        } catch(e) { 
-          debugLog(`Geocoding error: ${e.name} - ${e.message}`);
-          if (e.name === 'AbortError') {
-            debugLog('Request was aborted due to timeout');
-          }
-          resolve(null); 
-        }
-
-        await sleep(RATE_LIMIT_MS);
-      }
-      isProcessingQueue = false;
-    }
-
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-    async function reverseGeocode(lat, lng) {
-      const cached = getCachedResult(lat, lng);
-      if (cached) return cached;
-
-      return new Promise(resolve => {
-        geocodeQueue.push({ lat, lng, resolve });
-        processQueue();
-      });
-    }
-
-    function getFileName(index, originalName, exif) {
-      const selectedRule = currentNamingRule; 
-      const serial = String(index + 1).padStart(3, '0');
-      switch (selectedRule) {
-        case 'date': return `${getTimestamp()}_${serial}.jpg`;
-        case 'original': return originalName;
-        case 'gps': 
-          if (exif && exif.gps) { 
-            const lat = exif.gps.lat.toFixed(2).replace('.', '_'); 
-            const lng = exif.gps.lng.toFixed(2).replace('.', '_'); 
-            return `${lat}_${lng}_${serial}.jpg`; 
-          } 
-          return `${getTimestamp()}_${serial}.jpg`;
-        case 'custom': 
-          const prefix = currentCustomPrefix || 'custom'; 
-          return `${prefix}_${serial}.jpg`;
-        default: return `${getTimestamp()}_${serial}.jpg`;
-      }
-    }
-
-    async function processImage(file, exif, serial) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas'); 
-          canvas.width = img.width; 
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d'); 
-          ctx.drawImage(img, 0, 0);
-
-          const barHeight = Math.max(35, Math.floor(img.height * 0.045));
-          const padding = Math.max(10, Math.floor(img.width * 0.01));
-          const fontSize = Math.max(11, Math.floor(barHeight * 0.4));
-
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'; 
-          ctx.beginPath(); 
-          ctx.roundRect(0, img.height - barHeight, img.width, barHeight, [10, 0, 0, 0]); 
-          ctx.fill();
-          ctx.fillStyle = '#fff'; 
-          ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`; 
-          ctx.textBaseline = 'middle';
-
-          const parts = [];
-          if (exif.placeName && exif.placeName.trim()) parts.push(exif.placeName.trim());
-          else if (exif.location && exif.location.trim()) parts.push(exif.location.trim());
-          else parts.push('No GPS data');
-
-          if (exif.timestamp && exif.timestamp.trim()) parts.push(exif.timestamp.trim());
-          else parts.push(new Date().toISOString().replace('T', ' ').substring(0, 19));
-
-          let serialText = `#${typeof serial === 'number' ? serial : '?'}`;
-          if (currentNamingRule === 'custom' && currentCustomPrefix) serialText = `${currentCustomPrefix}_${typeof serial === 'number' ? serial : '?'}`;
-          else if (currentNamingRule === 'original') serialText = '';
-          if (serialText) parts.push(serialText);
-
-          const text = parts.join(' | ');
-          const textWidth = ctx.measureText(text).width;
-          if (textWidth > img.width - padding * 2) { 
-            const scaled = Math.max(9, fontSize * (img.width - padding * 2) / textWidth); 
-            ctx.font = `${scaled}px -apple-system, BlinkMacSystemFont, sans-serif`; 
-          }
-          ctx.fillText(text, padding, img.height - barHeight / 2);
-
-          canvas.toBlob(blob => { 
-            URL.revokeObjectURL(img.src); 
-            resolve({ blob, url: URL.createObjectURL(blob) });
-          }, 'image/jpeg', 0.95);
-        };
-
-        img.onerror = () => { resolve(null); };
-        img.src = URL.createObjectURL(file);
-      });
+    function generateFilename(exifData, index) {
+      const date = exifData.timestamp ? exifData.timestamp.replace(/[:\s]/g, '') : 'UnknownDate';
+      return `${date}_${String(index + 1).padStart(3, '0')}.jpg`;
     }
 
     async function processImages() {
-      const loadingOverlay = document.getElementById('loading-overlay');
-      const progressFill = document.getElementById('progress-fill');
-      const loadingText = document.getElementById('loading-text');
-      const downloadBtn = document.getElementById('download-all-btn');
-      const resultsSection = document.getElementById('results-section');
-      const resultsGrid = document.getElementById('results-grid');
-      const emptyResults = document.getElementById('empty-results');
-
-      loadingOverlay.classList.add('show'); 
-      progressFill.style.width = '0%'; 
-      resultsSection.style.display = 'none';
+      if (selectedFiles.length === 0) return;
+      
+      showLoading(true, '正在处理图片...', '准备中...');
       processedImages = [];
 
       for (let i = 0; i < selectedFiles.length; i++) {
-        loadingText.textContent = `${translations[currentLang]['loading-text']} ${i + 1}/${selectedFiles.length}`;
-        debugLog(`Processing image ${i + 1}/${selectedFiles.length}`);
+        const file = selectedFiles[i];
+        updateLoadingStatus(`正在处理 ${i + 1}/${selectedFiles.length}: ${file.name}`);
 
-        const exif = await extractExif(selectedFiles[i]);
-        debugLog(`EXIF data: ${JSON.stringify(exif)}`);
-        debugLog(`GPS data: lat=${exif.gps?.lat}, lng=${exif.gps?.lng}, location=${exif.location}, placeName=${exif.placeName}`);
-        if (exif.gps) {
-          debugLog(`Calling reverse geocode for ${exif.gps.lat}, ${exif.gps.lng}`);
+        const exifData = await extractExif(file);
+
+        if (exifData.gps) {
           try {
-            const placeName = await reverseGeocode(exif.gps.lat, exif.gps.lng);
-            debugLog(`Reverse geocode result: ${placeName}`);
-            exif.placeName = placeName || exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
-            debugLog(`Final placeName set to: ${exif.placeName}`);
-          } catch(e) {
-            debugLog(`Reverse geocode error: ${e.message}`);
-            exif.placeName = exif.location || `${exif.gps.lat.toFixed(4)}, ${exif.gps.lng.toFixed(4)}`;
+            const placeName = await reverseGeocode(exifData.gps.lat, exifData.gps.lng);
+            if (placeName) {
+              exifData.placeName = placeName;
+            }
+          } catch (e) {
+            debugLog(`Geocoding failed: ${e.message}`, 'error');
           }
-        } else {
-          debugLog('No GPS data found in EXIF');
         }
 
-        const processed = await processImage(selectedFiles[i], exif, i + 1);
-        if (processed) {
-          const fileName = getFileName(i, selectedFiles[i].name, exif);
-          processedImages.push({ ...processed, originalName: selectedFiles[i].name, fileName });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = URL.createObjectURL(file);
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height + 200;
+        ctx.drawImage(img, 0, 0);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(0, img.height, img.width, 200);
+
+        ctx.fillStyle = '#ffffff';
+        const fontSize = Math.max(32, Math.min(48, img.width / 18));
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.textAlign = 'left';
+        
+        let locationText = exifData.placeName || exifData.location || 'Unknown Location';
+        
+        if (exifData.placeName && exifData.gps) {
+          locationText = `${exifData.placeName}`;
         }
-        progressFill.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
+        
+        locationText = locationText.length > 60 ? locationText.substring(0, 60) + '...' : locationText;
+        
+        ctx.fillText(locationText, 25, img.height + fontSize + 15);
+        
+        const coordsText = `${exifData.gps?.lat?.toFixed(4)}°N, ${exifData.gps?.lng?.toFixed(4)}°E`;
+        ctx.font = `normal ${fontSize * 0.65}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.fillStyle = '#a1a1aa';
+        ctx.fillText(coordsText, 25, img.height + fontSize + 20 + fontSize * 0.65 + 8);
+        
+        if (exifData.timestamp) {
+          ctx.font = `normal ${fontSize * 0.55}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+          ctx.fillStyle = '#888888';
+          ctx.fillText(exifData.timestamp, 25, img.height + fontSize + 20 + fontSize * 0.65 + 8 + fontSize * 0.55 + 6);
+        }
+
+        const annotatedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+        const annotatedFile = new File([annotatedBlob], generateFilename(exifData, i), { type: 'image/jpeg' });
+        processedImages.push({ file: annotatedFile, exifData });
+        
+        URL.revokeObjectURL(img.src);
       }
 
-      loadingOverlay.classList.remove('show');
-      resultsSection.style.display = 'flex';
-      resultsGrid.innerHTML = '';
-      emptyResults.style.display = 'none';
-
-      processedImages.forEach((img, i) => {
-        const card = document.createElement('div'); 
-        card.className = 'result-card';
-        const imageEl = document.createElement('img'); 
-        imageEl.src = img.url;
-        const info = document.createElement('div'); 
-        info.className = 'info';
-        const name = document.createElement('span'); 
-        name.className = 'name'; 
-        name.textContent = img.fileName;
-        const btn = document.createElement('button'); 
-        btn.className = 'download-btn';
-        btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>';
-        btn.onclick = () => downloadSingle(img.blob, img.fileName);
-
-        info.appendChild(name); 
-        info.appendChild(btn);
-        card.appendChild(imageEl); 
-        card.appendChild(info);
-        resultsGrid.appendChild(card);
-      });
-
-      downloadBtn.disabled = false;
-      showToast(translations[currentLang]['toast-success']);
+      showLoading(false);
+      displayResults();
+      showToast('处理完成！');
     }
 
-    function downloadSingle(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; 
-      a.download = filename;
-      document.body.appendChild(a); 
-      a.click();
-      document.body.removeChild(a); 
-      URL.revokeObjectURL(url);
+    function displayResults() {
+      const resultsGrid = document.getElementById('results-grid');
+      const emptyResults = document.getElementById('empty-results');
+
+      if (!resultsGrid || !emptyResults) return;
+
+      if (processedImages.length > 0) {
+        resultsGrid.innerHTML = '';
+        emptyResults.style.display = 'none';
+
+        processedImages.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.innerHTML = `
+            <img src="${URL.createObjectURL(item.file)}" alt="${item.file.name}">
+            <div class="info">
+              <span class="name">${item.file.name}</span>
+              <div style="display: flex; gap: 6px;">
+                <button class="download-btn" data-index="${index}" title="下载">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                </button>
+                <button class="download-btn rename-btn" data-index="${index}" title="重命名">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+              </div>
+            </div>
+          `;
+          resultsGrid.appendChild(card);
+        });
+
+        document.querySelectorAll('.download-btn:not(.rename-btn)').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.dataset.index);
+            downloadImage(index);
+          });
+        });
+
+        document.querySelectorAll('.rename-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.dataset.index);
+            showRenameModal(index);
+          });
+        });
+      } else {
+        resultsGrid.innerHTML = '';
+        emptyResults.style.display = 'block';
+      }
+      
+      document.getElementById('download-all-btn').disabled = processedImages.length === 0;
     }
 
-    async function downloadAllImages() {
-      if (processedImages.length === 0) return;
-      if (processedImages.length === 1) {
-        downloadSingle(processedImages[0].blob, processedImages[0].fileName);
+    function showRenameModal(index) {
+      renameIndex = index;
+      const item = processedImages[index];
+      const nameWithoutExt = item.file.name.replace(/\.[^/.]+$/, '');
+      document.getElementById('rename-input').value = nameWithoutExt;
+      document.getElementById('rename-modal').classList.add('show');
+    }
+
+    function hideRenameModal() {
+      document.getElementById('rename-modal').classList.remove('show');
+      renameIndex = -1;
+    }
+
+    function handleRename() {
+      if (renameIndex < 0) return;
+      const newName = document.getElementById('rename-input').value.trim();
+      if (!newName) {
+        showToast('请输入文件名', 'error');
         return;
       }
-
-      const zip = new JSZip();
-      processedImages.forEach(img => {
-        zip.file(img.fileName, img.blob);
-      });
-
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
-      const url = URL.createObjectURL(blob); 
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = `annotated_images_${timestamp}.zip`;
-      document.body.appendChild(a); 
-      a.click(); 
-      document.body.removeChild(a); 
-      URL.revokeObjectURL(url);
+      
+      const item = processedImages[renameIndex];
+      const newFile = new File([item.file], newName + '.jpg', { type: 'image/jpeg' });
+      processedImages[renameIndex] = { ...item, file: newFile };
+      
+      hideRenameModal();
+      displayResults();
+      showToast('文件名已更新');
     }
 
-    function showToast(message) { 
-      const toast = document.getElementById('toast'); 
-      const toastText = document.getElementById('toast-text'); 
-      toastText.textContent = message; 
-      toast.classList.add('show'); 
-      setTimeout(() => toast.classList.remove('show'), 3000); 
+    async function downloadImage(index) {
+      const item = processedImages[index];
+      if (!item) return;
+
+      try {
+        const url = URL.createObjectURL(item.file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = item.file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        showToast('图片已下载');
+      } catch (e) {
+        showToast('下载失败: ' + e.message, 'error');
+      }
     }
 
-    function getSerial() { 
-      const today = new Date(); 
-      const key = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-      const stored = localStorage.getItem(`serial_${key}`); 
-      const serial = stored ? parseInt(stored, 10) + 1 : 1; 
-      localStorage.setItem(`serial_${key}`, serial.toString()); 
-      return serial; 
+    async function downloadAll() {
+      if (processedImages.length === 0) return;
+      
+      for (let i = 0; i < processedImages.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await downloadImage(i);
+      }
     }
-    
-    function getTimestamp() { 
-      const now = new Date(); 
-      return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+
+    function toggleDebug() {
+      debugMode = !debugMode;
+      const panel = document.getElementById('debug-panel');
+      if (panel) {
+        if (debugMode) {
+          panel.classList.remove('hidden');
+          showToast('调试模式已开启', 'info');
+        } else {
+          panel.classList.add('hidden');
+          showToast('调试模式已关闭', 'info');
+        }
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('lang-btn').addEventListener('click', toggleLangDropdown);
-      document.getElementById('toggle-debug').addEventListener('click', toggleDebugPanel);
-      document.getElementById('file-input').addEventListener('change', handleFileSelect);
-      document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
-      document.getElementById('upload-area').addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('active'); });
-      document.getElementById('upload-area').addEventListener('dragleave', (e) => { e.preventDefault(); e.currentTarget.classList.remove('active'); });
-      document.getElementById('upload-area').addEventListener('drop', handleDrop);
-      document.getElementById('process-btn').addEventListener('click', showNamingModal);
-      document.getElementById('download-all-btn').addEventListener('click', downloadAllImages);
-      document.getElementById('naming-cancel').addEventListener('click', hideNamingModal);
-      document.getElementById('naming-confirm').addEventListener('click', confirmNaming);
-      
-      document.querySelectorAll('.lang-option').forEach(opt => {
-        opt.addEventListener('click', () => setLanguage(opt.dataset.lang));
+      document.getElementById('upload-area')?.addEventListener('click', () => {
+        document.getElementById('file-input')?.click();
       });
-
-      document.querySelectorAll('input[name="naming-rule-modal"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-          document.querySelectorAll('.naming-modal .option').forEach(opt => opt.classList.remove('selected'));
-          e.target.closest('.option').classList.add('selected');
-          const customInput = document.getElementById('custom-prefix-modal');
-          if (e.target.value === 'custom') { customInput.classList.add('show'); customInput.disabled = false; }
-          else { customInput.classList.remove('show'); customInput.disabled = true; }
-        });
+      document.getElementById('upload-area')?.addEventListener('dragover', (e) => e.preventDefault());
+      document.getElementById('upload-area')?.addEventListener('drop', handleDrop);
+      document.getElementById('file-input')?.addEventListener('change', handleFileSelect);
+      document.getElementById('process-btn')?.addEventListener('click', processImages);
+      document.getElementById('download-all-btn')?.addEventListener('click', downloadAll);
+      document.getElementById('login-btn')?.addEventListener('click', showAuthModal);
+      document.getElementById('auth-submit')?.addEventListener('click', handleLogin);
+      document.getElementById('user-logout')?.addEventListener('click', handleLogout);
+      document.getElementById('debug-toggle')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleDebug();
+      });
+      document.getElementById('rename-cancel')?.addEventListener('click', hideRenameModal);
+      document.getElementById('rename-confirm')?.addEventListener('click', handleRename);
+      document.getElementById('user-btn')?.addEventListener('click', () => {
+        document.getElementById('user-dropdown')?.classList.toggle('show');
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.user-menu')) {
+          document.getElementById('user-dropdown')?.classList.remove('show');
+        }
       });
     });
   </script>
 </body>
->>>>>>> e4eba883a04c08465efdd112d57d260134d78910
 </html>
