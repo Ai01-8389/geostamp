@@ -58,8 +58,8 @@
     .signin-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 18px;
+      gap: 8px;
+      padding: 7px 16px;
       background: var(--accent);
       color: #fff;
       border: none;
@@ -68,11 +68,62 @@
       font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
-      transition: opacity 0.15s;
+      max-width: 200px;
+      overflow: hidden;
+      transition: opacity 0.15s, background 0.15s;
+      position: relative;
     }
     .signin-btn:hover { opacity: 0.85; }
-    .signin-btn .user-icon { width: 16px; height: 16px; }
+    .signin-btn .user-icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .signin-btn .user-initial {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .signin-btn .btn-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 120px;
+    }
     .signin-btn.logged-in { background: #34C759; }
+    .signin-btn.logged-in:hover { opacity: 0.9; }
+    .account-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      min-width: 200px;
+      z-index: 9999;
+      overflow: hidden;
+    }
+    .account-dropdown.show { display: block; }
+    .account-dropdown .acct-email {
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #888;
+      border-bottom: 1px solid #eee;
+      word-break: break-all;
+    }
+    .account-dropdown .acct-logout {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      font-size: 13px;
+      color: #c0392b;
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .account-dropdown .acct-logout:hover { background: #fef2f2; }
 
     .lang-selector { position: relative; }
     .lang-selector .lang-btn { 
@@ -896,10 +947,16 @@
         <span>GeoStamp</span>
       </div>
       <div class="nav-links">
-        <button class="signin-btn" id="signin-btn" title="Sign in">
-          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
-          <span>Sign in</span>
-        </button>
+        <div style="position:relative;flex-shrink:0;">
+          <button class="signin-btn" id="signin-btn" title="Sign in">
+            <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+            <span class="btn-label">Sign in</span>
+          </button>
+          <div class="account-dropdown" id="account-dropdown">
+            <div class="acct-email" id="acct-email"></div>
+            <button class="acct-logout" id="acct-logout">Sign out</button>
+          </div>
+        </div>
         <div class="lang-selector">
           <button class="lang-btn" id="lang-btn">
             <span id="lang-flag">🇺🇸</span>
@@ -2353,36 +2410,40 @@
     
     function updateSignInButton() {
       const btn = document.getElementById('signin-btn');
-      const span = btn?.querySelector('span');
+      const label = btn?.querySelector('.btn-label');
       const iconSvg = btn?.querySelector('.user-icon');
-      if (!btn || !span) return;
+      const dropdown = document.getElementById('account-dropdown');
+      const acctEmail = document.getElementById('acct-email');
+      if (!btn || !label) return;
       const token = localStorage.getItem('access_token');
       const userData = localStorage.getItem('user');
       if (token && userData) {
         try {
           const user = JSON.parse(userData);
           const isPro = user.plan === 'pro';
-          span.textContent = (user.email || 'User').split('@')[0];
+          const shortName = (user.email || 'User').split('@')[0];
+          label.textContent = shortName;
+          label.title = user.email || '';
           btn.classList.toggle('logged-in', isPro);
-          btn.style.background = isPro ? '#34C759' : 'var(--accent)';
-          btn.title = 'Sign out';
-          if (iconSvg) {
-            iconSvg.style.display = 'none';
-            let init = btn.querySelector('.user-initial');
-            if (!init) {
-              init = document.createElement('span');
-              init.className = 'user-initial';
-              init.textContent = ((user.email || 'U')[0] || 'U').toUpperCase();
-              init.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700';
-              iconSvg.insertAdjacentElement('afterend', init);
-            }
+          btn.title = user.email || 'Signed in';
+          // Avatar
+          if (iconSvg) iconSvg.style.display = 'none';
+          let init = btn.querySelector('.user-initial');
+          if (!init) {
+            init = document.createElement('span');
+            init.className = 'user-initial';
+            init.textContent = ((user.email || 'U')[0] || 'U').toUpperCase();
+            btn.insertBefore(init, label);
           }
-        } catch (e) { /* fall through */ }
+          // Update dropdown
+          if (acctEmail) acctEmail.textContent = user.email || '';
+        } catch (e) {}
       } else {
-        span.textContent = 'Sign in'; btn.classList.remove('logged-in');
-        btn.style.background = 'var(--accent)'; btn.title = 'Sign in';
+        label.textContent = 'Sign in'; label.title = '';
+        btn.classList.remove('logged-in'); btn.title = 'Sign in';
         if (iconSvg) iconSvg.style.display = '';
         const init = btn.querySelector('.user-initial'); if (init) init.remove();
+        if (dropdown) dropdown.classList.remove('show');
       }
     }
     
@@ -2440,13 +2501,27 @@
       });
       
       // Sign in button
-      document.getElementById('signin-btn')?.addEventListener('click', () => {
+      document.getElementById('signin-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         const isLoggedIn = !!localStorage.getItem('access_token');
         if (isLoggedIn) {
-          signOut();
+          document.getElementById('account-dropdown')?.classList.toggle('show');
         } else {
           openAuthDialog();
         }
+      });
+      
+      // Close dropdown on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#signin-btn') && !e.target.closest('#account-dropdown')) {
+          document.getElementById('account-dropdown')?.classList.remove('show');
+        }
+      });
+      
+      // Logout button in dropdown
+      document.getElementById('acct-logout')?.addEventListener('click', () => {
+        document.getElementById('account-dropdown')?.classList.remove('show');
+        signOut();
       });
       
       const uploadArea = document.getElementById('upload-area');
