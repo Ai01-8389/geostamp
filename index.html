@@ -791,6 +791,81 @@
     #empty-results p {
       font-size: 15px;
     }
+    
+    /* ── Auth Modal ── */
+    .auth-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .auth-overlay.open { display: flex; }
+    .auth-dialog {
+      background: #fff;
+      border-radius: 16px;
+      width: 400px; max-width: 94vw;
+      padding: 32px 28px 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      position: relative;
+      animation: authSlideIn .25s ease;
+    }
+    @keyframes authSlideIn { from {opacity:0;transform:translateY(20px) scale(.97)} to {opacity:1;transform:translateY(0) scale(1)} }
+    .auth-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none;
+      font-size: 24px; color: #888;
+      cursor: pointer; line-height: 1; padding: 4px;
+    }
+    .auth-close:hover { color: #333; }
+    .auth-dialog h3 { margin: 0 0 8px; font-size: 22px; font-weight: 600; color: #1d1d1f; }
+    .auth-dialog .auth-subtitle { margin: 0 0 20px; font-size: 14px; color: #666; }
+    .auth-step { transition: opacity .15s; }
+    .auth-step.hidden { display: none; }
+    .auth-dialog input[type=email] {
+      width: 100%; box-sizing: border-box;
+      padding: 12px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px; outline: none;
+      transition: border-color .15s;
+    }
+    .auth-dialog input[type=email]:focus { border-color: var(--accent); }
+    .code-boxes { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+    .code-digit {
+      width: 46px; height: 56px;
+      text-align: center;
+      font-size: 22px; font-weight: 600;
+      border: 1.5px solid #ddd;
+      border-radius: 10px; outline: none;
+      transition: border-color .15s;
+      caret-color: var(--accent);
+    }
+    .code-digit:focus { border-color: var(--accent); }
+    .auth-btn {
+      display: block; width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 500;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .auth-btn:hover:not(:disabled) { opacity: .85; }
+    .auth-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .auth-error { color: #e53e3e; font-size: 13px; margin: 8px 0 0; min-height: 18px; }
+    .auth-resend { margin: 12px 0 0; font-size: 13px; color: #888; text-align: center; }
+    .auth-resend a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+    .auth-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; }
+    .auth-loading.hidden { display: none; }
+    .auth-spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #eee;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -2092,34 +2167,237 @@
     }
     
     // --- Auth / Sign-In ---
-    function signOut() {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      updateSignInButton();
+    const API_BASE = 'https://api.geostamp.top';
+    
+    function openAuthDialog() {
+      const ov = document.getElementById('auth-overlay');
+      if (!ov) return;
+      ov.classList.add('open');
+      document.getElementById('auth-step-email').classList.remove('hidden');
+      document.getElementById('auth-step-code').classList.add('hidden');
+      document.getElementById('auth-loading').classList.add('hidden');
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-error-email').textContent = '';
+      document.getElementById('auth-error-code').textContent = '';
+      document.querySelectorAll('.code-digit').forEach(el => el.value = '');
+      setTimeout(() => document.getElementById('auth-email')?.focus(), 100);
+    }
+    
+    function closeAuthDialog() {
+      document.getElementById('auth-overlay')?.classList.remove('open');
+    }
+    
+    document.getElementById('auth-close')?.addEventListener('click', closeAuthDialog);
+    document.getElementById('auth-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeAuthDialog();
+    });
+    
+    // Send verification code
+    document.getElementById('auth-send-code')?.addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const errorEl = document.getElementById('auth-error-email');
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorEl.textContent = 'Please enter a valid email address';
+        return;
+      }
+      const btn = document.getElementById('auth-send-code');
+      btn.disabled = true; btn.textContent = 'Sending...'; errorEl.textContent = '';
+      try {
+        const res = await fetch(API_BASE + '/api/auth/request-code', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('auth-step-email').classList.add('hidden');
+          document.getElementById('auth-step-code').classList.remove('hidden');
+          document.getElementById('auth-email-display').textContent = email;
+          let count = 60; const cd = document.getElementById('auth-countdown');
+          cd.textContent = count;
+          const link = document.getElementById('auth-resend-link');
+          link.style.pointerEvents = 'none'; link.style.opacity = '0.5';
+          const timer = setInterval(() => { count--; cd.textContent = count;
+            if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+          }, 1000);
+          setTimeout(() => document.querySelector('.code-digit')?.focus(), 150);
+        } else {
+          errorEl.textContent = data.error?.message || 'Failed to send code';
+        }
+      } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
+      finally { btn.disabled = false; btn.textContent = 'Send Verification Code'; }
+    });
+    
+    // Code input handling
+    document.getElementById('code-boxes')?.addEventListener('input', e => {
+      if (e.target.value.length === 1) {
+        const next = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)+1}"]`);
+        if (next) next.focus();
+      }
+    });
+    document.getElementById('code-boxes')?.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value) {
+        const prev = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)-1}"]`);
+        if (prev) { prev.focus(); prev.select(); }
+      }
+    });
+    document.querySelectorAll('.code-digit').forEach(el => {
+      el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9]/g, ''); });
+    });
+    
+    // Verify code
+    document.getElementById('auth-verify-code')?.addEventListener('click', async () => {
+      const code = Array.from(document.querySelectorAll('.code-digit')).map(el => el.value).join('');
+      const errorEl = document.getElementById('auth-error-code');
+      if (code.length !== 6) { errorEl.textContent = 'Please enter the full 6-digit code'; return; }
+      const email = document.getElementById('auth-email-display').textContent;
+      const btn = document.getElementById('auth-verify-code');
+      btn.disabled = true; btn.textContent = 'Verifying...'; errorEl.textContent = '';
+      try {
+        const res = await fetch(API_BASE + '/api/auth/verify-code', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('refresh_token', data.refresh_token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          closeAuthDialog(); updateSignInButton();
+          await verifySubscriptionStatus();
+          if (typeof showToast === 'function') showToast(data.is_new_user ? 'Account created!' : 'Welcome back!');
+        } else {
+          const r = data.error?.attemptsRemaining;
+          errorEl.textContent = r !== undefined ? `${data.error?.message || 'Invalid code'} (${r} attempts left)` : (data.error?.message || 'Invalid code');
+          if (data.error?.code === 'TOO_MANY_ATTEMPTS' || data.error?.code === 'CODE_EXPIRED') {
+            document.getElementById('auth-step-code').classList.add('hidden');
+            document.getElementById('auth-step-email').classList.remove('hidden');
+          }
+        }
+      } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
+      finally { btn.disabled = false; btn.textContent = 'Verify'; }
+    });
+    
+    // Resend code
+    document.getElementById('auth-resend-link')?.addEventListener('click', async () => {
+      const email = document.getElementById('auth-email-display').textContent;
+      const errorEl = document.getElementById('auth-error-code');
+      const link = document.getElementById('auth-resend-link');
+      link.style.pointerEvents = 'none'; link.style.opacity = '0.5'; errorEl.textContent = '';
+      try {
+        const res = await fetch(API_BASE + '/api/auth/request-code', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          let count = 60; const cd = document.getElementById('auth-countdown'); cd.textContent = count;
+          const timer = setInterval(() => { count--; cd.textContent = count;
+            if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+          }, 1000);
+          document.querySelectorAll('.code-digit').forEach(el => el.value = '');
+          document.querySelector('.code-digit')?.focus();
+        } else { errorEl.textContent = data.error?.message || 'Failed to resend'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+      } catch (err) { errorEl.textContent = 'Network error.'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+    });
+    
+    // Verify subscription
+    async function verifySubscriptionStatus() {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+      try {
+        const res = await fetch(API_BASE + '/api/desktop/verify', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.valid && data.subscription) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          user.plan = data.subscription.plan;
+          user.subscriptionStatus = data.subscription.status;
+          localStorage.setItem('user', JSON.stringify(user));
+          if (data.subscription.plan === 'pro') {
+            MAX_FREE_IMAGES = 999999; isSubscriber = true; updateUIForSubscriber();
+          }
+        }
+      } catch (err) { if (typeof debugLog === 'function') debugLog('Subscription check: ' + err.message); }
+    }
+    
+    async function signOut() {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try { await fetch(API_BASE + '/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); }
+        catch (err) {}
+      }
+      localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user'); isSubscriber = false; MAX_FREE_IMAGES = 1;
+      updateSignInButton(); updateUIForSubscriber();
     }
     
     function updateSignInButton() {
       const btn = document.getElementById('signin-btn');
       const span = btn?.querySelector('span');
+      const iconSvg = btn?.querySelector('.user-icon');
       if (!btn || !span) return;
       const token = localStorage.getItem('access_token');
-      if (token) {
-        span.textContent = 'Account';
-        btn.classList.add('logged-in');
-        btn.title = 'Sign out';
+      const userData = localStorage.getItem('user');
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData);
+          const isPro = user.plan === 'pro';
+          span.textContent = (user.email || 'User').split('@')[0];
+          btn.classList.toggle('logged-in', isPro);
+          btn.style.background = isPro ? '#34C759' : 'var(--accent)';
+          btn.title = 'Sign out';
+          if (iconSvg) {
+            iconSvg.style.display = 'none';
+            let init = btn.querySelector('.user-initial');
+            if (!init) {
+              init = document.createElement('span');
+              init.className = 'user-initial';
+              init.textContent = ((user.email || 'U')[0] || 'U').toUpperCase();
+              init.style.cssText = 'width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700';
+              iconSvg.insertAdjacentElement('afterend', init);
+            }
+          }
+        } catch (e) { /* fall through */ }
       } else {
-        span.textContent = 'Sign in';
-        btn.classList.remove('logged-in');
-        btn.title = 'Sign in';
+        span.textContent = 'Sign in'; btn.classList.remove('logged-in');
+        btn.style.background = 'var(--accent)'; btn.title = 'Sign in';
+        if (iconSvg) iconSvg.style.display = '';
+        const init = btn.querySelector('.user-initial'); if (init) init.remove();
       }
     }
     
-    // Auto-check login on page load
     (function initAuth() {
-      window.addEventListener('DOMContentLoaded', updateSignInButton);
-      // Also run immediately if DOM already loaded
-      if (document.readyState !== 'loading') updateSignInButton();
+      async function autoLogin() {
+        const token = localStorage.getItem('access_token');
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!token) return updateSignInButton();
+        try {
+          const res = await fetch(API_BASE + '/api/user/me', { headers: { 'Authorization': `Bearer ${token}` } });
+          if (res.ok) {
+            const user = await res.json();
+            localStorage.setItem('user', JSON.stringify(user));
+            await verifySubscriptionStatus(); updateSignInButton(); return;
+          }
+        } catch (err) {}
+        if (refreshToken) {
+          try {
+            const res = await fetch(API_BASE + '/api/auth/refresh', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: refreshToken })
+            });
+            const data = await res.json();
+            if (data.success) {
+              localStorage.setItem('access_token', data.access_token);
+              localStorage.setItem('refresh_token', data.refresh_token);
+              await verifySubscriptionStatus(); updateSignInButton(); return;
+            }
+          } catch (err) {}
+        }
+        signOut();
+      }
+      if (document.readyState !== 'loading') autoLogin();
+      else window.addEventListener('DOMContentLoaded', autoLogin);
+      updateSignInButton();
     })();
     
     function updateUIForSubscriber() {
@@ -2143,11 +2421,9 @@
       document.getElementById('signin-btn')?.addEventListener('click', () => {
         const isLoggedIn = !!localStorage.getItem('access_token');
         if (isLoggedIn) {
-          // Logout
           signOut();
         } else {
-          // Show login dialog (to be implemented)
-          alert('Sign in feature coming soon');
+          openAuthDialog();
         }
       });
       
@@ -2198,5 +2474,42 @@
       }
     });
   </script>
+  
+  <!-- Auth Modal -->
+  <div class="auth-overlay" id="auth-overlay">
+    <div class="auth-dialog">
+      <button class="auth-close" id="auth-close">&times;</button>
+      <h3 id="auth-title">Sign In</h3>
+      <p class="auth-subtitle" id="auth-subtitle">Enter your email to access your account</p>
+      
+      <div class="auth-step" id="auth-step-email">
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+        <p class="auth-error" id="auth-error-email"></p>
+        <button class="auth-btn" id="auth-send-code" style="margin-top:12px">Send Verification Code</button>
+      </div>
+      
+      <div class="auth-step hidden" id="auth-step-code">
+        <p style="text-align:center;font-size:14px;color:#555;margin:0">We sent a 6-digit code to</p>
+        <p style="text-align:center;font-size:14px;font-weight:500;color:#1d1d1f;margin:4px 0 12px" id="auth-email-display"></p>
+        <div class="code-boxes" id="code-boxes">
+          <input type="text" maxlength="1" class="code-digit" data-index="0" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="code-digit" data-index="1" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="code-digit" data-index="2" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="code-digit" data-index="3" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="code-digit" data-index="4" inputmode="numeric" pattern="[0-9]">
+          <input type="text" maxlength="1" class="code-digit" data-index="5" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <button class="auth-btn" id="auth-verify-code">Verify</button>
+        <p class="auth-error" id="auth-error-code"></p>
+        <p class="auth-resend">Didn't receive it? <a id="auth-resend-link">Send again</a> (wait <span id="auth-countdown">60</span>s)</p>
+      </div>
+      
+      <div class="auth-loading hidden" id="auth-loading">
+        <div class="auth-spinner"></div>
+        <p style="color:#888;font-size:14px">Please wait...</p>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
