@@ -2205,117 +2205,119 @@
       document.getElementById('auth-overlay')?.classList.remove('open');
     }
     
-    document.getElementById('auth-close')?.addEventListener('click', closeAuthDialog);
-    document.getElementById('auth-overlay')?.addEventListener('click', e => {
-      if (e.target === e.currentTarget) closeAuthDialog();
-    });
-    
-    // Send verification code
-    document.getElementById('auth-send-code')?.addEventListener('click', async () => {
-      const email = document.getElementById('auth-email').value.trim();
-      const errorEl = document.getElementById('auth-error-email');
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        errorEl.textContent = 'Please enter a valid email address';
-        return;
-      }
-      const btn = document.getElementById('auth-send-code');
-      btn.disabled = true; btn.textContent = 'Sending...'; errorEl.textContent = '';
-      try {
-        const res = await fetch(API_BASE + '/api/auth/request-code', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('auth-step-email').classList.add('hidden');
-          document.getElementById('auth-step-code').classList.remove('hidden');
-          document.getElementById('auth-email-display').textContent = email;
-          let count = 60; const cd = document.getElementById('auth-countdown');
-          cd.textContent = count;
-          const link = document.getElementById('auth-resend-link');
-          link.style.pointerEvents = 'none'; link.style.opacity = '0.5';
-          const timer = setInterval(() => { count--; cd.textContent = count;
-            if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-          }, 1000);
-          setTimeout(() => document.querySelector('.code-digit')?.focus(), 150);
-        } else {
-          errorEl.textContent = data.error?.message || 'Failed to send code';
+    function initAuthEvents() {
+      document.getElementById('auth-close')?.addEventListener('click', closeAuthDialog);
+      document.getElementById('auth-overlay')?.addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeAuthDialog();
+      });
+      
+      // Send verification code
+      document.getElementById('auth-send-code')?.addEventListener('click', async () => {
+        const email = document.getElementById('auth-email').value.trim();
+        const errorEl = document.getElementById('auth-error-email');
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          errorEl.textContent = 'Please enter a valid email address';
+          return;
         }
-      } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
-      finally { btn.disabled = false; btn.textContent = 'Send Verification Code'; }
-    });
-    
-    // Code input handling
-    document.getElementById('code-boxes')?.addEventListener('input', e => {
-      if (e.target.value.length === 1) {
-        const next = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)+1}"]`);
-        if (next) next.focus();
-      }
-    });
-    document.getElementById('code-boxes')?.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !e.target.value) {
-        const prev = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)-1}"]`);
-        if (prev) { prev.focus(); prev.select(); }
-      }
-    });
-    document.querySelectorAll('.code-digit').forEach(el => {
-      el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9]/g, ''); });
-    });
-    
-    // Verify code
-    document.getElementById('auth-verify-code')?.addEventListener('click', async () => {
-      const code = Array.from(document.querySelectorAll('.code-digit')).map(el => el.value).join('');
-      const errorEl = document.getElementById('auth-error-code');
-      if (code.length !== 6) { errorEl.textContent = 'Please enter the full 6-digit code'; return; }
-      const email = document.getElementById('auth-email-display').textContent;
-      const btn = document.getElementById('auth-verify-code');
-      btn.disabled = true; btn.textContent = 'Verifying...'; errorEl.textContent = '';
-      try {
-        const res = await fetch(API_BASE + '/api/auth/verify-code', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('access_token', data.access_token);
-          localStorage.setItem('refresh_token', data.refresh_token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          closeAuthDialog(); updateSignInButton();
-          await verifySubscriptionStatus();
-          if (typeof showToast === 'function') showToast(data.is_new_user ? 'Account created!' : 'Welcome back!');
-        } else {
-          const r = data.error?.attemptsRemaining;
-          errorEl.textContent = r !== undefined ? `${data.error?.message || 'Invalid code'} (${r} attempts left)` : (data.error?.message || 'Invalid code');
-          if (data.error?.code === 'TOO_MANY_ATTEMPTS' || data.error?.code === 'CODE_EXPIRED') {
-            document.getElementById('auth-step-code').classList.add('hidden');
-            document.getElementById('auth-step-email').classList.remove('hidden');
+        const btn = document.getElementById('auth-send-code');
+        btn.disabled = true; btn.textContent = 'Sending...'; errorEl.textContent = '';
+        try {
+          const res = await fetch(API_BASE + '/api/auth/request-code', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          if (data.success) {
+            document.getElementById('auth-step-email').classList.add('hidden');
+            document.getElementById('auth-step-code').classList.remove('hidden');
+            document.getElementById('auth-email-display').textContent = email;
+            let count = 60; const cd = document.getElementById('auth-countdown');
+            cd.textContent = count;
+            const link = document.getElementById('auth-resend-link');
+            link.style.pointerEvents = 'none'; link.style.opacity = '0.5';
+            const timer = setInterval(() => { count--; cd.textContent = count;
+              if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+            }, 1000);
+            setTimeout(() => document.querySelector('.code-digit')?.focus(), 150);
+          } else {
+            errorEl.textContent = data.error?.message || 'Failed to send code';
           }
+        } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
+        finally { btn.disabled = false; btn.textContent = 'Send Verification Code'; }
+      });
+      
+      // Code input handling
+      document.getElementById('code-boxes')?.addEventListener('input', e => {
+        if (e.target.value.length === 1) {
+          const next = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)+1}"]`);
+          if (next) next.focus();
         }
-      } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
-      finally { btn.disabled = false; btn.textContent = 'Verify'; }
-    });
-    
-    // Resend code
-    document.getElementById('auth-resend-link')?.addEventListener('click', async () => {
-      const email = document.getElementById('auth-email-display').textContent;
-      const errorEl = document.getElementById('auth-error-code');
-      const link = document.getElementById('auth-resend-link');
-      link.style.pointerEvents = 'none'; link.style.opacity = '0.5'; errorEl.textContent = '';
-      try {
-        const res = await fetch(API_BASE + '/api/auth/request-code', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (data.success) {
-          let count = 60; const cd = document.getElementById('auth-countdown'); cd.textContent = count;
-          const timer = setInterval(() => { count--; cd.textContent = count;
-            if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-          }, 1000);
-          document.querySelectorAll('.code-digit').forEach(el => el.value = '');
-          document.querySelector('.code-digit')?.focus();
-        } else { errorEl.textContent = data.error?.message || 'Failed to resend'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-      } catch (err) { errorEl.textContent = 'Network error.'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-    });
+      });
+      document.getElementById('code-boxes')?.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !e.target.value) {
+          const prev = document.querySelector(`.code-digit[data-index="${parseInt(e.target.dataset.index)-1}"]`);
+          if (prev) { prev.focus(); prev.select(); }
+        }
+      });
+      document.querySelectorAll('.code-digit').forEach(el => {
+        el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9]/g, ''); });
+      });
+      
+      // Verify code
+      document.getElementById('auth-verify-code')?.addEventListener('click', async () => {
+        const code = Array.from(document.querySelectorAll('.code-digit')).map(el => el.value).join('');
+        const errorEl = document.getElementById('auth-error-code');
+        if (code.length !== 6) { errorEl.textContent = 'Please enter the full 6-digit code'; return; }
+        const email = document.getElementById('auth-email-display').textContent;
+        const btn = document.getElementById('auth-verify-code');
+        btn.disabled = true; btn.textContent = 'Verifying...'; errorEl.textContent = '';
+        try {
+          const res = await fetch(API_BASE + '/api/auth/verify-code', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+          });
+          const data = await res.json();
+          if (data.success) {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            closeAuthDialog(); updateSignInButton();
+            await verifySubscriptionStatus();
+            if (typeof showToast === 'function') showToast(data.is_new_user ? 'Account created!' : 'Welcome back!');
+          } else {
+            const r = data.error?.attemptsRemaining;
+            errorEl.textContent = r !== undefined ? `${data.error?.message || 'Invalid code'} (${r} attempts left)` : (data.error?.message || 'Invalid code');
+            if (data.error?.code === 'TOO_MANY_ATTEMPTS' || data.error?.code === 'CODE_EXPIRED') {
+              document.getElementById('auth-step-code').classList.add('hidden');
+              document.getElementById('auth-step-email').classList.remove('hidden');
+            }
+          }
+        } catch (err) { errorEl.textContent = 'Network error. Please try again.'; }
+        finally { btn.disabled = false; btn.textContent = 'Verify'; }
+      });
+      
+      // Resend code
+      document.getElementById('auth-resend-link')?.addEventListener('click', async () => {
+        const email = document.getElementById('auth-email-display').textContent;
+        const errorEl = document.getElementById('auth-error-code');
+        const link = document.getElementById('auth-resend-link');
+        link.style.pointerEvents = 'none'; link.style.opacity = '0.5'; errorEl.textContent = '';
+        try {
+          const res = await fetch(API_BASE + '/api/auth/request-code', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          if (data.success) {
+            let count = 60; const cd = document.getElementById('auth-countdown'); cd.textContent = count;
+            const timer = setInterval(() => { count--; cd.textContent = count;
+              if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+            }, 1000);
+            document.querySelectorAll('.code-digit').forEach(el => el.value = '');
+            document.querySelector('.code-digit')?.focus();
+          } else { errorEl.textContent = data.error?.message || 'Failed to resend'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+        } catch (err) { errorEl.textContent = 'Network error.'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+      });
+    }
     
     // Verify subscription
     async function verifySubscriptionStatus() {
@@ -2429,6 +2431,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      initAuthEvents();
+      
       document.getElementById('lang-btn')?.addEventListener('click', toggleLangDropdown);
       
       document.querySelectorAll('.lang-option').forEach(opt => {
