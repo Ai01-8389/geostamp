@@ -2288,6 +2288,10 @@
             document.getElementById('auth-step-email').classList.add('hidden');
             document.getElementById('auth-step-code').classList.remove('hidden');
             document.getElementById('auth-email-display').textContent = email;
+            if (data._debug_code) {
+              const hint = document.getElementById('auth-debug-hint');
+              if (hint) { hint.textContent = '(Dev) Code: ' + data._debug_code; hint.style.display = 'block'; }
+            }
             let count = 60; const cd = document.getElementById('auth-countdown');
             cd.textContent = count;
             const link = document.getElementById('auth-resend-link');
@@ -2588,6 +2592,7 @@
       <div class="auth-step hidden" id="auth-step-code">
         <p style="text-align:center;font-size:14px;color:#555;margin:0">We sent a 6-digit code to</p>
         <p style="text-align:center;font-size:14px;font-weight:500;color:#1d1d1f;margin:4px 0 12px" id="auth-email-display"></p>
+        <p id="auth-debug-hint" style="display:none;text-align:center;font-size:13px;color:#7C3AED;font-weight:600;margin:0 0 8px;background:#f5f3ff;padding:4px 10px;border-radius:6px;"></p>
         <div class="code-boxes" id="code-boxes">
           <input type="text" maxlength="1" class="code-digit" data-index="0" inputmode="numeric" pattern="[0-9]">
           <input type="text" maxlength="1" class="code-digit" data-index="1" inputmode="numeric" pattern="[0-9]">
