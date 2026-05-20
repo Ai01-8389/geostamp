@@ -51,6 +51,25 @@
     
     .nav-links { display: flex; gap: 24px; align-items: center; }
     
+    .signin-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .signin-btn:hover { opacity: 0.85; }
+    .signin-btn .user-icon { width: 16px; height: 16px; }
+    .signin-btn.logged-in { background: #34C759; }
+
     .lang-selector { position: relative; }
     .lang-selector .lang-btn { 
       display: flex; 
@@ -783,6 +802,10 @@
         <span>GeoStamp</span>
       </div>
       <div class="nav-links">
+        <button class="signin-btn" id="signin-btn" title="Sign in">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          <span>Sign in</span>
+        </button>
         <div class="lang-selector">
           <button class="lang-btn" id="lang-btn">
             <span id="lang-flag">🇺🇸</span>
@@ -2068,6 +2091,37 @@
       }
     }
     
+    // --- Auth / Sign-In ---
+    function signOut() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      updateSignInButton();
+    }
+    
+    function updateSignInButton() {
+      const btn = document.getElementById('signin-btn');
+      const span = btn?.querySelector('span');
+      if (!btn || !span) return;
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        span.textContent = 'Account';
+        btn.classList.add('logged-in');
+        btn.title = 'Sign out';
+      } else {
+        span.textContent = 'Sign in';
+        btn.classList.remove('logged-in');
+        btn.title = 'Sign in';
+      }
+    }
+    
+    // Auto-check login on page load
+    (function initAuth() {
+      window.addEventListener('DOMContentLoaded', updateSignInButton);
+      // Also run immediately if DOM already loaded
+      if (document.readyState !== 'loading') updateSignInButton();
+    })();
+    
     function updateUIForSubscriber() {
       const pricingBtn = document.getElementById('pricing-btn');
       if (pricingBtn && isSubscriber) {
@@ -2083,6 +2137,18 @@
       
       document.querySelectorAll('.lang-option').forEach(opt => {
         opt.addEventListener('click', () => setLanguage(opt.dataset.lang));
+      });
+      
+      // Sign in button
+      document.getElementById('signin-btn')?.addEventListener('click', () => {
+        const isLoggedIn = !!localStorage.getItem('access_token');
+        if (isLoggedIn) {
+          // Logout
+          signOut();
+        } else {
+          // Show login dialog (to be implemented)
+          alert('Sign in feature coming soon');
+        }
       });
       
       const uploadArea = document.getElementById('upload-area');
