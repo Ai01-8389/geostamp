@@ -2237,38 +2237,24 @@
           showLoading(true);
           showToast('Payment successful! Verifying subscription...');
           
-          // Call server to verify subscription status
+          // Directly upgrade user on server
           const token = localStorage.getItem('access_token');
           if (token) {
-            // Poll a few times since webhook may be delayed
-            let verified = false;
-            for (let i = 0; i < 5; i++) {
-              await new Promise(r => setTimeout(r, 2000));
-              try {
-                const res = await fetch(API_BASE + '/api/desktop/verify', {
-                  headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                if (data.valid && data.subscription?.plan === 'pro') {
-                  const user = JSON.parse(localStorage.getItem('user') || '{}');
-                  user.plan = 'pro';
-                  user.subscriptionStatus = 'active';
-                  localStorage.setItem('user', JSON.stringify(user));
-                  isSubscriber = true;
-                  MAX_FREE_IMAGES = 999999;
-                  updateUIForSubscriber();
-                  showToast('Subscription activated successfully!');
-                  verified = true;
-                  break;
-                }
-              } catch (e) {}
-            }
-            if (!verified) {
-              // Fallback: set locally, rely on webhook eventually
-              isSubscriber = true;
-              localStorage.setItem('geostamp_subscriber', 'true');
-              updateUIForSubscriber();
-              showToast('Processing. Check back in a moment.');
+            try {
+              const upgradeRes = await fetch(API_BASE + '/api/user/upgrade', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              const upgradeData = await upgradeRes.json();
+              if (upgradeData.success) {
+                localStorage.setItem('user', JSON.stringify(upgradeData.user));
+                isSubscriber = true;
+                MAX_FREE_IMAGES = 999999;
+                updateUIForSubscriber();
+                showToast('Subscription activated successfully!');
+              }
+            } catch (e) {
+              debugLog('Upgrade error: ' + e.message);
             }
           } else {
             // Not logged in during purchase
