@@ -2176,12 +2176,23 @@
         debugLog('=== Initiating Creem.io payment ===');
         debugLog('Calling /api/create-checkout...');
         
+        // Get user email if logged in
+        let userEmail = '';
+        try {
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            userEmail = JSON.parse(userData).email || '';
+          }
+        } catch (e) {}
+        
         const response = await fetch(API_BASE + '/api/create-checkout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({})
+          body: JSON.stringify({
+            email: userEmail || undefined
+          })
         });
         
         debugLog(`Response status: ${response.status}`);
