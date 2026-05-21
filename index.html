@@ -2419,7 +2419,8 @@
         catch (err) {}
       }
       localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user'); isSubscriber = false; MAX_FREE_IMAGES = 1;
+      localStorage.removeItem('user'); localStorage.removeItem('geostamp_subscriber');
+      isSubscriber = false; MAX_FREE_IMAGES = 1;
       updateSignInButton(); updateUIForSubscriber();
     }
     
