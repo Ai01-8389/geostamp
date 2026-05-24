@@ -1950,37 +1950,50 @@
         ruTitle: 'Политика Конфиденциальности',
         arTitle: 'سياسة الخصوصية',
         content: `
-          <h3>Effective Date: January 1, 2024</h3>
-          <p>GeoStamp ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our image geotagging service.</p>
+          <h3>Effective Date: May 23, 2025</h3>
+          <p>GeoStamp ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our image geotagging service (the "Service").</p>
 
-          <h3>1. Information Collection</h3>
-          <p><strong>Local Processing:</strong> All image processing, including EXIF data extraction and GPS coordinate parsing, is performed entirely in your browser. No images, metadata, or personal data are ever uploaded to our servers.</p>
-          <p><strong>Reverse Geocoding:</strong> When you enable location lookup, your GPS coordinates are sent to third-party providers (BigDataCloud, OpenStreetMap Nominatim, or OpenCageData) solely to retrieve location names. This data is transmitted via standard HTTPS requests and is subject to each provider's privacy policy.</p>
-          <p><strong>No Account Required:</strong> We do not require user registration. We do not collect names, emails, or any personally identifiable information (PII).</p>
+          <h3>1. Information We Collect</h3>
+          <p><strong>Account Information:</strong> When you create an account, we collect your email address for authentication purposes. We use a verification code sent to your email to confirm your identity. No passwords are stored.</p>
+          <p><strong>Image Processing:</strong> All image uploads and EXIF/GPS data extraction are processed locally in your browser. Your images and their metadata are never uploaded to or stored on our servers.</p>
+          <p><strong>Geocoding Data:</strong> When you enable location lookup, GPS coordinates (lat/lng) are sent to third-party geocoding providers (BigDataCloud, OpenStreetMap Nominatim) to resolve place names. This data is transmitted via HTTPS and is subject to each provider's privacy policy.</p>
+          <p><strong>Payment Information:</strong> Subscription payments are processed by Creem.io. We do not collect or store your credit card details. Creem may collect billing information as described in their <a href="https://creem.io/legal/privacy" target="_blank" style="color:#7C3AED;">Privacy Policy</a>.</p>
 
-          <h3>2. Data Storage</h3>
-          <p>Since all processing occurs locally in your browser, no data is stored on our servers. Processed images are generated locally and downloaded directly to your device.</p>
+          <h3>2. How We Use Your Information</h3>
+          <p>- <strong>Email:</strong> Used solely for account authentication, subscription management, and service-related communications.</p>
+          <p>- <strong>Subscription Data:</strong> Stored to manage your plan tier (Free/Pro), usage limits, and billing status.</p>
+          <p>- <strong>Geocoding:</strong> Coordinates are transmitted only to resolve location names and are not stored by us.</p>
 
-          <h3>3. Cookies</h3>
-          <p>GeoStamp does not use cookies or similar tracking technologies. This is a pure frontend application with no server-side session management.</p>
+          <h3>3. Data Storage</h3>
+          <p>Account and subscription data (email, plan status) is stored securely on Cloudflare KV, a globally distributed key-value store with encryption at rest. Access tokens are stored in your browser's localStorage and transmitted via HTTPS.</p>
+          <p>Processed images are generated locally in your browser and saved directly to your device. We do not retain copies of your images.</p>
 
           <h3>4. Third-Party Services</h3>
-          <p>We use the following third-party services for reverse geocoding:</p>
-          <p>- <strong>BigDataCloud:</strong> <a href="https://www.bigdatacloud.com/privacy-policy" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
-          <p>- <strong>OpenStreetMap Nominatim:</strong> <a href="https://operations.osmfoundation.org/policies/privacy/" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
-          <p>- <strong>OpenCageData:</strong> <a href="https://opencagedata.com/privacy" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
+          <p>We rely on the following third-party providers:</p>
+          <p>- <strong>Creem.io</strong> — Payment processing: <a href="https://creem.io/legal/privacy" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
+          <p>- <strong>Resend</strong> — Email delivery (verification codes): <a href="https://resend.com/legal/privacy-policy" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
+          <p>- <strong>Cloudflare</strong> — Backend hosting & data storage: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
+          <p>- <strong>BigDataCloud</strong> — Reverse geocoding: <a href="https://www.bigdatacloud.com/privacy-policy" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
+          <p>- <strong>OpenStreetMap Nominatim</strong> — Reverse geocoding: <a href="https://operations.osmfoundation.org/policies/privacy/" target="_blank" style="color:#7C3AED;">Privacy Policy</a></p>
 
           <h3>5. Data Security</h3>
-          <p>Because all processing happens locally in your browser, your images and data never leave your device during processing. This provides the highest level of privacy and security.</p>
+          <p>All communication between your browser and our servers uses HTTPS/TLS encryption. We implement reasonable security measures to protect your account data. However, no method of electronic storage is 100% secure.</p>
 
-          <h3>6. Children's Privacy</h3>
-          <p>Our service does not knowingly collect any personal information from children under the age of 13. Since no data is collected, this is not applicable.</p>
+          <h3>6. Data Retention</h3>
+          <p>Your account data (email, plan status) is retained as long as your account remains active. You may request deletion of your account and associated data by contacting us. Access tokens expire after 2 hours (with optional "Remember Me" extending via refresh tokens).</p>
 
-          <h3>7. Changes to This Policy</h3>
-          <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date.</p>
+          <h3>7. Your Rights (GDPR / CCPA)</h3>
+          <p>If you are located in the European Economic Area (EEA) or California, you have the right to access, rectify, or delete your personal data, and to object to or restrict processing. To exercise these rights, contact us at the email below.</p>
 
-          <h3>8. Contact Us</h3>
-          <p>If you have any questions about this Privacy Policy, please contact us at: <a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
+          <h3>8. Children's Privacy</h3>
+          <p>Our Service is not intended for children under 13. We do not knowingly collect personal information from children under 13.</p>
+
+          <h3>9. Changes to This Policy</h3>
+          <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date. Continued use of the Service after changes constitutes acceptance.</p>
+
+          <h3>10. Contact Us</h3>
+          <p>Data Controller: GeoStamp</p>
+          <p>Email: <a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
         `,
         zhContent: `
           <h3>生效日期：2024年1月1日</h3>
@@ -2003,39 +2016,47 @@
         ruTitle: 'Условия Использования',
         arTitle: 'شروط الخدمة',
         content: `
-          <h3>Effective Date: January 1, 2024</h3>
-          <p>By accessing or using GeoStamp ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service.</p>
+          <h3>Effective Date: May 23, 2025</h3>
+          <p>By accessing or using GeoStamp ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the Service.</p>
 
-          <h3>1. Description of Service</h3>
-          <p>GeoStamp is a browser-based image geotagging tool that extracts GPS coordinates from image EXIF data and overlays location information onto images. All processing is performed locally in your browser.</p>
+          <h3>1. Service Description</h3>
+          <p>GeoStamp is a browser-based and desktop image geotagging tool that extracts GPS coordinates from image EXIF data and overlays location information onto images. The Service is available as a web application and as downloadable desktop software for Windows and macOS.</p>
 
-          <h3>2. Acceptable Use</h3>
-          <p>You agree not to use the Service for any unlawful purpose or in any way that could damage, disable, or impair the Service. You are solely responsible for the images you process using the Service.</p>
+          <h3>2. Account & Authentication</h3>
+          <p>To use the Service, you must create an account using a valid email address. You are responsible for maintaining the confidentiality of your authentication tokens and for all activities under your account. You must provide accurate and complete information.</p>
 
-          <h3>3. Intellectual Property</h3>
-          <p>You retain all rights to the images you process using GeoStamp. We do not claim any ownership over your images. The GeoStamp software (excluding your content) is protected by copyright and other intellectual property laws.</p>
+          <h3>3. Subscription Plans</h3>
+          <p><strong>Free Plan:</strong> 1 image per batch.</p>
+          <p><strong>Pro Plan (Web):</strong> Up to 30 images per batch, unlimited batches — $7.99/month.</p>
+          <p><strong>Pro Plan (Desktop):</strong> Up to 100 images per batch, unlimited batches — $7.99/month.</p>
+          <p>Subscription fees are billed monthly through our payment processor, Creem.io. You may cancel at any time; access continues until the end of the current billing period. No partial refunds for mid-cycle cancellations.</p>
 
-          <h3>4. Disclaimer of Warranties</h3>
-          <p>The Service is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or other harmful components.</p>
+          <h3>4. Payments & Refunds</h3>
+          <p>Payments are processed securely by Creem.io. We do not store your payment card details. Refund requests must be submitted within 7 days of purchase by contacting us. See our Refund Policy for full details. If you initiate a chargeback without first contacting us, we reserve the right to suspend or terminate your account.</p>
 
-          <h3>5. Limitation of Liability</h3>
-          <p>In no event shall GeoStamp, its officers, directors, employees, or agents be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from your use of the Service.</p>
-          <p>Our total liability for any claim arising out of or relating to these Terms or the Service shall not exceed the amount you paid to us for use of the Service (if any).</p>
+          <h3>5. Acceptable Use</h3>
+          <p>You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to bypass usage limits or subscription checks; (c) upload malicious files; (d) reverse-engineer or scrape the Service; (e) resell or redistribute the Service without authorization.</p>
 
-          <h3>6. Indemnification</h3>
-          <p>You agree to indemnify and hold harmless GeoStamp and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, or expenses arising out of or relating to your use of the Service or violation of these Terms.</p>
+          <h3>6. Intellectual Property</h3>
+          <p>You retain all rights to the images you process. We claim no ownership over your content. The GeoStamp software, name, logo, and website are protected by copyright and trademark laws. You may not copy, modify, or distribute the Software except as expressly permitted.</p>
 
-          <h3>7. Third-Party Services</h3>
-          <p>The Service may integrate with third-party reverse geocoding providers. Your use of these services is subject to their respective terms and privacy policies.</p>
+          <h3>7. Disclaimer of Warranties</h3>
+          <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. We do not warrant uninterrupted, error-free operation, or that GPS/EXIF data will be accurate in all cases.</p>
 
-          <h3>8. Termination</h3>
-          <p>We reserve the right to terminate or suspend your access to the Service at any time, without notice, for any reason, including if you violate these Terms.</p>
+          <h3>8. Limitation of Liability</h3>
+          <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, GEOSTAMP SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE. Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
 
-          <h3>9. Governing Law</h3>
-          <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which GeoStamp operates, without regard to its conflict of law provisions.</p>
+          <h3>9. Termination</h3>
+          <p>We may suspend or terminate your account for violation of these Terms. You may terminate your account at any time by contacting us. Upon termination, your account data will be deleted within 30 days.</p>
 
-          <h3>10. Contact Us</h3>
-          <p>If you have any questions about these Terms, please contact us at: <a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
+          <h3>10. Governing Law</h3>
+          <p>These Terms shall be governed by the laws of Hong Kong SAR, without regard to conflict of law principles. Any disputes shall be resolved through binding arbitration in Hong Kong, unless prohibited by applicable consumer protection laws in your jurisdiction.</p>
+
+          <h3>11. Changes to Terms</h3>
+          <p>We may modify these Terms at any time. Material changes will be communicated via email or in-app notice. Continued use after changes constitutes acceptance.</p>
+
+          <h3>12. Contact</h3>
+          <p>Email: <a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
         `,
         zhContent: `
           <h3>生效日期：2024年1月1日</h3>
@@ -2058,26 +2079,30 @@
         ruTitle: 'Политика Cookie',
         arTitle: 'سياسة ملفات الارتباط',
         content: `
-          <h3>Effective Date: January 1, 2024</h3>
-          <p>This Cookie Policy explains how GeoStamp uses cookies and similar technologies when you use our Service.</p>
+          <h3>Effective Date: May 23, 2025</h3>
+          <p>This Cookie Policy explains how GeoStamp uses cookies and similar technologies.</p>
 
           <h3>1. Does GeoStamp Use Cookies?</h3>
-          <p><strong>No.</strong> GeoStamp is a pure frontend application. We do not use cookies, web beacons, pixels, or any other tracking technologies. No data is stored on or transmitted to our servers.</p>
+          <p><strong>No.</strong> GeoStamp does not use HTTP cookies, web beacons, pixels, or tracking scripts. We do not run any analytics, advertising, or social media trackers.</p>
 
           <h3>2. Local Storage</h3>
-          <p>GeoStamp may use your browser's local storage to remember your preferred language setting. This data never leaves your device and can be cleared at any time through your browser settings.</p>
+          <p>GeoStamp uses your browser's <strong>localStorage</strong> to store:</p>
+          <p>- Authentication tokens (JWT access token + refresh token) for login sessions</p>
+          <p>- Language preference</p>
+          <p>- Application settings (filename prefix, download path)</p>
+          <p>This data remains on your device, is never transmitted to third parties, and can be cleared at any time via your browser settings.</p>
 
           <h3>3. Third-Party Cookies</h3>
-          <p>GeoStamp does not embed third-party analytics, advertising, or social media cookies. The only external requests made are to reverse geocoding APIs (if you enable location lookup), and these requests do not set cookies.</p>
+          <p>GeoStamp does not embed third-party cookies. The only external requests are to geocoding APIs (BigDataCloud, OpenStreetMap) and our backend API (api.geostamp.top), none of which set cookies in your browser. Our payment processor (Creem.io) may use its own cookies on its checkout page; see Creem’s Cookie Policy.</p>
 
           <h3>4. Your Choices</h3>
-          <p>Since we do not use cookies, there is no cookie consent banner or opt-out mechanism required. You may still configure your browser to block cookies from all websites, which will not affect GeoStamp's functionality.</p>
+          <p>You can configure your browser to block all localStorage usage. This may prevent you from logging in or persisting preferences. Clearing localStorage will log you out and reset settings.</p>
 
-          <h3>5. Changes to This Policy</h3>
-          <p>We may update this Cookie Policy from time to time. Changes will be posted on this page with an updated effective date.</p>
+          <h3>5. Changes</h3>
+          <p>We may update this Cookie Policy. Changes will be posted with an updated effective date.</p>
 
-          <h3>6. Contact Us</h3>
-          <p>If you have any questions about this Cookie Policy, please contact us at: <a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
+          <h3>6. Contact</h3>
+          <p><a href="mailto:contact@geostamp.com" style="color:#7C3AED;">contact@geostamp.com</a></p>
         `,
         zhContent: `
           <h3>生效日期：2024年1月1日</h3>
@@ -2098,7 +2123,7 @@
         ruTitle: 'Политика Возврата',
         arTitle: 'سياسة الاسترداد',
         content: `
-          <h3>Effective Date: January 1, 2024</h3>
+          <h3>Effective Date: May 23, 2025</h3>
           <p>This Refund Policy applies to all subscription purchases made through GeoStamp's payment processor (Creem.io).</p>
 
           <h3>1. 7-Day Money-Back Guarantee</h3>
