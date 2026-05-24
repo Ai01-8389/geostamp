@@ -626,28 +626,8 @@
     .toast .icon { font-size: 18px; }
     .toast .text { color: #FFFFFF; font-size: 14px; font-weight: 500; }
     
-    .debug-panel { 
-      position: fixed; 
-      bottom: 100px; 
-      left: 32px; 
-      background: #1D1D1F; 
-      border-radius: 16px; 
-      padding: 20px; 
-      max-width: 420px; 
-      max-height: 320px; 
-      overflow-y: auto; 
-      z-index: 999; 
-      font-family: 'SF Mono', Monaco, 'Courier New', monospace; 
-      font-size: 12px; 
-      color: #34C759; 
-      display: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    }
-    .debug-panel.show { display: block; }
-    .debug-panel h4 { color: #FFFFFF; margin-bottom: 12px; font-size: 14px; font-weight: 600; }
-    .debug-panel .log-entry { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .debug-panel .log-entry:last-child { border-bottom: none; }
     
+
     @media (max-width: 1024px) { 
       .main-content { 
         grid-template-columns: 1fr 1fr; 
@@ -809,19 +789,23 @@
       font-weight: 500;
     }
     
-    #toggle-debug {
+    .exif-tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
       font-size: 12px;
-      padding: 8px 16px;
-      background: rgba(124, 58, 237, 0.08);
-      border: 1px solid rgba(124, 58, 237, 0.2);
-      color: #7C3AED;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      color: #86868b;
       margin-top: 16px;
+      padding: 10px 12px;
+      background: rgba(124, 58, 237, 0.04);
+      border: 1px solid rgba(124, 58, 237, 0.1);
+      border-radius: 10px;
+      line-height: 1.5;
     }
-    #toggle-debug:hover {
-      background: rgba(124, 58, 237, 0.12);
+    .exif-tip svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: #7C3AED;
     }
     
     #empty-preview {
@@ -1042,8 +1026,9 @@
           <input type="text" id="custom-location" placeholder="Or enter custom location...">
         </div>
         
-        <div>
-          <button id="toggle-debug">Toggle Debug</button>
+        <div class="exif-tip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Transfer photos from phone to computer as files. Messaging apps (WeChat, WhatsApp, etc.) may strip GPS and timestamp data.</span>
         </div>
       </div>
 
@@ -1136,10 +1121,6 @@
 
   <div id="toast" class="toast"><span class="icon">✅</span><span class="text" id="toast-text">Processing complete!</span></div>
 
-  <div id="debug-panel" class="debug-panel">
-    <h4>Debug Log</h4>
-    <div id="debug-log"></div>
-  </div>
 
   <script>
     const API_BASE = 'https://api.geostamp.top';
@@ -1261,7 +1242,8 @@
     let processedImages = [];
     let currentNamingRule = 'date';
     let currentCustomPrefix = '';
-    let showDebug = false;
+
+
     let isSubscriber = false;
     let MAX_FREE_IMAGES = 1;
     let persistentFileCounter = 1;
@@ -1290,26 +1272,9 @@
     let customLocationText = '';
 
     function debugLog(message) {
-      const logDiv = document.getElementById('debug-log');
-      if (!logDiv) return;
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      const time = new Date().toLocaleTimeString();
-      entry.textContent = `[${time}] ${message}`;
-      logDiv.appendChild(entry);
-      logDiv.scrollTop = logDiv.scrollHeight;
       console.log(message);
     }
-
-    function toggleDebugPanel() {
-      showDebug = !showDebug;
-      const panel = document.getElementById('debug-panel');
-      if (panel) {
-        if (showDebug) panel.classList.add('show');
-        else panel.classList.remove('show');
-      }
-    }
-
+    
     function toggleLangDropdown() {
       const dropdown = document.getElementById('lang-dropdown');
       if (dropdown) dropdown.classList.toggle('show');
@@ -2625,7 +2590,8 @@
         });
       });
       
-      document.getElementById('toggle-debug')?.addEventListener('click', toggleDebugPanel);
+      // Debug panel removed — EXIF transfer tip added instead
+
 
       initComplianceOverlay();
       
