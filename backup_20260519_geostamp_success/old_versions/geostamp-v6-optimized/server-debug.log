@@ -1,0 +1,34 @@
+[2026-05-16T22:45:23.625Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T22:45:23.632Z] 📄 Open http://localhost:3000/index.html in your browser
+[2026-05-16T22:45:23.633Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T22:47:55.348Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T22:47:55.352Z] 📄 Open http://localhost:3000/index.html in your browser
+[2026-05-16T22:47:55.353Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T23:41:58.579Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T23:41:58.581Z] 📄 Open http://localhost:3000/index.html in your browser
+[2026-05-16T23:41:58.582Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T23:43:52.745Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T23:43:52.748Z] 📄 Open http://localhost:3000/index.html in your browser
+[2026-05-16T23:43:52.749Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T23:44:55.146Z] === Creating Creem checkout ===
+[2026-05-16T23:44:55.147Z] API Base: https://test-api.creem.io
+[2026-05-16T23:44:55.149Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T23:44:55.150Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T23:44:55.151Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index.html"
+}
+[2026-05-16T23:44:56.041Z] Response status: 200
+[2026-05-16T23:44:56.054Z] Response data: {
+  "id": "ch_ujf6AFlNEWjlAV87SFOyy",
+  "object": "checkout",
+  "product": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "units": 1,
+  "status": "pending",
+  "checkout_url": "https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_ujf6AFlNEWjlAV87SFOyy",
+  "success_url": "http://localhost:3000/index.html",
+  "mode": "test"
+}
+[2026-05-16T23:44:56.059Z] ✅ Checkout created successfully
+[2026-05-16T23:44:56.063Z] Original checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_ujf6AFlNEWjlAV87SFOyy
+[2026-05-16T23:44:56.065Z] Final checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_ujf6AFlNEWjlAV87SFOyy

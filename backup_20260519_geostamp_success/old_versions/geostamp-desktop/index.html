@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoStamp - 图片地理位置标注工具</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%); min-height: 100vh; color: #e4e4e7; }
+    #app { min-height: 100vh; }
+
+    .auth-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+    .auth-overlay.show { display: flex; }
+    .auth-container { background: #1f1f2e; border-radius: 20px; padding: 32px; width: 90%; max-width: 420px; border: 1px solid rgba(255,255,255,0.1); }
+    .auth-header { text-align: center; margin-bottom: 28px; }
+    .auth-header h2 { font-size: 24px; font-weight: 600; color: #f4f4f5; }
+    .auth-header p { font-size: 14px; color: #71717a; margin-top: 8px; }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-form input { padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e4e4e7; font-size: 14px; }
+    .auth-form input:focus { outline: none; border-color: #8b5cf6; }
+    .auth-form button { padding: 14px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .auth-switch { text-align: center; margin-top: 20px; font-size: 13px; color: #71717a; }
+    .auth-switch button { background: none; border: none; color: #a78bfa; cursor: pointer; text-decoration: underline; }
+    .auth-error { display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #f87171; font-size: 13px; text-align: center; margin-bottom: 16px; }
+    .auth-error.show { display: block; }
+
+    header { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo svg { width: 32px; height: 32px; }
+    .logo span { font-weight: 600; font-size: 17px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { text-decoration: none; color: #a1a1aa; font-size: 13px; font-weight: 500; }
+    .nav-links a:hover { color: #e4e4e7; }
+    .nav-links .btn { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+
+    .user-menu { position: relative; }
+    .user-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; cursor: pointer; color: #a78bfa; font-size: 13px; }
+    .user-btn .badge { background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+    .user-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: #1f1f2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px; min-width: 160px; z-index: 100; }
+    .user-dropdown.show { display: block; }
+    .user-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: none; color: #e4e4e7; font-size: 13px; cursor: pointer; border-radius: 6px; text-align: left; }
+    .user-option:hover { background: rgba(255,255,255,0.08); }
+
+    .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .upload-section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; }
+    .upload-area { background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; margin-top: 16px; }
+    .upload-area:hover { border-color: #8b5cf6; }
+    .upload-icon svg { width: 48px; height: 48px; color: #a1a1aa; }
+    #file-input { display: none; }
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+    .preview-item { aspect-ratio: 4/3; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; position: relative; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item span { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; font-size: 10px; overflow: hidden; }
+
+    .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; }
+    .btn-primary { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #e4e4e7; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .action-buttons { display: flex; gap: 12px; margin-top: 16px; }
+    .upload-limit { color: #fbbf24; font-size: 12px; margin-top: 8px; }
+
+    .settings-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+    .settings-row label { font-size: 13px; color: #a1a1aa; }
+    .settings-row input[type="text"] { flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e4e4e7; font-size: 13px; }
+    .settings-row button { padding: 8px 14px; font-size: 12px; }
+
+    .results-section { margin-top: 24px; }
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+    .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .result-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+    .result-card .info { padding: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); }
+    .result-card .name { font-size: 12px; color: #a1a1aa; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .download-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+    .download-btn svg { width: 16px; height: 16px; color: #e4e4e7; }
+
+    .pricing-section { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .pricing-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; text-align: center; }
+    .pricing-card.featured { border-color: rgba(139, 92, 246, 0.5); background: rgba(139, 92, 246, 0.08); }
+    .pricing-card h3 { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 8px; }
+    .pricing-card .price { font-size: 36px; font-weight: 600; color: #a78bfa; }
+    .pricing-card .period { font-size: 14px; color: #71717a; margin-bottom: 20px; }
+    .pricing-card ul { list-style: none; padding: 0; margin-bottom: 20px; }
+    .pricing-card li { padding: 8px 0; font-size: 14px; color: #a1a1aa; }
+    .pricing-card button { width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .pricing-card.featured button { background: white; color: #8b5cf6; }
+
+    .toast { display: none; position: fixed; bottom: 24px; right: 24px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 14px 18px; align-items: center; gap: 10px; }
+    .toast.show { display: flex; }
+    .toast.error { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+    .toast.info { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); }
+    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+    .loading-overlay.show { display: flex; }
+    .loading-content { text-align: center; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    .loading-text { color: #e4e4e7; font-size: 14px; }
+    .loading-status { color: #a1a1aa; font-size: 12px; margin-top: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .rename-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+    .rename-modal-overlay.show { display: flex; }
+    .rename-modal { background: #1f1f2e; border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+    .rename-modal h3 { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 16px; }
+    .rename-modal input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e4e4e7; font-size: 14px; margin-bottom: 16px; }
+    .rename-modal input:focus { outline: none; border-color: #8b5cf6; }
+    .rename-modal .modal-actions { display: flex; gap: 12px; }
+    .rename-modal .modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+    .rename-modal .modal-actions button:first-child { background: rgba(255,255,255,0.08); color: #e4e4e7; }
+    .rename-modal .modal-actions button:last-child { background: linear-gradient(135deg, #8b5cf6, #06b6d4); color: white; }
+
+    .debug-panel { margin-top: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; font-size: 12px; font-family: monospace; max-height: 300px; overflow-y: auto; }
+    .debug-panel.hidden { display: none; }
+    .debug-log { color: #a1a1aa; margin: 4px 0; }
+    .debug-log.error { color: #f87171; }
+    .debug-log.success { color: #34d399; }
+    .debug-log.info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="auth-overlay" class="auth-overlay">
+      <div class="auth-container">
+        <div class="auth-header">
+          <h2>欢迎回来</h2>
+          <p>登录您的账户</p>
+        </div>
+        <div id="auth-error" class="auth-error">错误信息</div>
+        <div class="auth-form">
+          <input type="email" id="auth-email" placeholder="邮箱地址" required>
+          <input type="password" id="auth-password" placeholder="密码" required>
+          <button id="auth-submit">登录</button>
+        </div>
+        <div class="auth-switch">
+          还没有账户？ <button id="auth-switch">注册</button>
+        </div>
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <p style="font-size: 11px; color: #71717a; text-align: center;">
+            测试账户：test@example.com / password123<br>
+            订阅账户：pro@example.com / password123
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8b5cf6"/><stop offset="100%" style="stop-color:#06b6d4"/></linearGradient></defs>
+          <rect width="32" height="32" rx="8" fill="url(#lg)"/><path d="M8 12h16M8 16h12M8 20h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#fff"/>
+        </svg>
+        <span>GeoStamp</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" id="debug-toggle">调试</a>
+        <a href="#features">功能</a>
+        <a href="#pricing">价格</a>
+        <div class="user-menu" id="user-menu" style="display: none;">
+          <button class="user-btn" id="user-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span id="user-name">用户</span>
+            <span class="badge" id="user-status" style="display:none">Pro</span>
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <button class="user-option" id="user-profile">个人资料</button>
+            <button class="user-option" id="user-subscribe">订阅管理</button>
+            <button class="user-option" id="user-logout">退出登录</button>
+          </div>
+        </div>
+        <button id="login-btn" class="btn">登录</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="upload-section">
+        <h2 style="font-size: 18px; color: #f4f4f5; margin-bottom: 8px;">上传图片</h2>
+        <p style="color: #71717a; font-size: 14px;">拖放图片到下方区域或点击选择文件</p>
+        
+        <input type="file" id="file-input" accept="image/*" multiple>
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6L16 6a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+          </div>
+          <h3 style="margin-top: 12px; color: #e4e4e7;">拖放图片到这里</h3>
+          <p style="color: #71717a; font-size: 13px; margin-top: 4px;">或点击选择文件</p>
+        </div>
+
+        <div class="settings-row">
+          <label>下载路径:</label>
+          <input type="text" id="download-path" placeholder="选择下载目录" readonly>
+          <button class="btn btn-secondary" id="select-path-btn">浏览...</button>
+        </div>
+
+        <div id="preview-container" class="preview-grid" style="display: none;"></div>
+        <div id="empty-preview" style="text-align: center; padding: 16px; color: #71717a;">
+          <p>请选择图片</p>
+          <p class="upload-limit" id="upload-limit">免费用户每次最多上传 1 张图片</p>
+        </div>
+
+        <div class="action-buttons">
+          <button id="process-btn" class="btn btn-primary" disabled>开始标注</button>
+          <button id="download-all-btn" class="btn btn-secondary" disabled>下载全部</button>
+        </div>
+      </div>
+
+      <div class="results-section" id="results-section">
+        <h2 style="font-size: 18px; color: #f4f4f5;">已标注图片</h2>
+        <div id="results-grid" class="results-grid"></div>
+        <div id="empty-results" style="text-align: center; padding: 40px; color: #71717a;">
+          <p>请先处理图片</p>
+        </div>
+      </div>
+
+      <div id="debug-panel" class="debug-panel hidden">
+        <h4 style="color: #f4f4f5; margin-bottom: 12px;">调试日志</h4>
+        <div id="debug-logs"></div>
+      </div>
+
+      <div id="pricing" class="pricing-section">
+        <div class="pricing-card">
+          <h3>免费版</h3>
+          <div class="price">$0</div>
+          <div class="period">永久免费</div>
+          <ul>
+            <li>每次最多处理 1 张图片</li>
+            <li>基础图片标注</li>
+            <li>社区支持</li>
+          </ul>
+          <button id="free-join">开始使用</button>
+        </div>
+        <div class="pricing-card featured">
+          <h3>Pro 专业版</h3>
+          <div class="price">$7.99</div>
+          <div class="period">每月</div>
+          <ul>
+            <li>无限图片处理</li>
+            <li>高清品质输出</li>
+            <li>批次处理支持</li>
+            <li>优先技术支持</li>
+          </ul>
+          <button id="pro-subscribe">立即订阅</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">处理中...</div>
+        <div class="loading-status" id="loading-status"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"><span>✓</span><span id="toast-text">操作成功!</span></div>
+
+    <div id="rename-modal" class="rename-modal-overlay">
+      <div class="rename-modal">
+        <h3>重命名图片</h3>
+        <input type="text" id="rename-input" placeholder="输入新文件名（不含扩展名）">
+        <div class="modal-actions">
+          <button id="rename-cancel">取消</button>
+          <button id="rename-confirm">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let isSubscriber = false;
+    const MAX_FREE_IMAGES = 1;
+    let selectedFiles = [];
+    let processedImages = [];
+    let downloadPath = '';
+    let renameIndex = -1;
+    let debugMode = false;
+
+    const mockUsers = {
+      'test@example.com': { password: 'password123', name: '测试用户', isSubscriber: false },
+      'pro@example.com': { password: 'password123', name: '付费用户', isSubscriber: true }
+    };
+
+    function debugLog(message, type = 'info') {
+      if (!debugMode) return;
+      const logsContainer = document.getElementById('debug-logs');
+      if (!logsContainer) return;
+      
+      const logElement = document.createElement('div');
+      logElement.className = `debug-log ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      logElement.textContent = `[${timestamp}] ${message}`;
+      logsContainer.appendChild(logElement);
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      if (toast && toastText) {
+        toast.className = 'toast';
+        if (type === 'error') toast.classList.add('error');
+        if (type === 'info') toast.classList.add('info');
+        toastText.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+      }
+      debugLog(`Toast: ${message}`, type);
+    }
+
+    function showLoading(show, text = '处理中...', status = '') {
+      const overlay = document.getElementById('loading-overlay');
+      const loadingText = document.getElementById('loading-text');
+      const loadingStatus = document.getElementById('loading-status');
+      
+      if (overlay) {
+        if (show) {
+          overlay.classList.add('show');
+          if (loadingText) loadingText.textContent = text;
+          if (loadingStatus) loadingStatus.textContent = status;
+        } else {
+          overlay.classList.remove('show');
+        }
+      }
+      debugLog(`Loading: ${show ? 'show' : 'hide'} - ${text}`, 'info');
+    }
+
+    function updateLoadingStatus(status) {
+      const loadingStatus = document.getElementById('loading-status');
+      if (loadingStatus) loadingStatus.textContent = status;
+      debugLog(`Status: ${status}`, 'info');
+    }
+
+    function showAuthModal() {
+      document.getElementById('auth-overlay')?.classList.add('show');
+    }
+
+    function hideAuthModal() {
+      document.getElementById('auth-overlay')?.classList.remove('show');
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('auth-email')?.value;
+      const password = document.getElementById('auth-password')?.value;
+      const errorDiv = document.getElementById('auth-error');
+
+      debugLog(`Login attempt: ${email}`, 'info');
+
+      if (!email || !password) {
+        errorDiv?.classList.add('show');
+        errorDiv.textContent = '请输入邮箱和密码';
+        debugLog('Login error: missing email/password', 'error');
+        return;
+      }
+
+      const user = mockUsers[email];
+      if (!user || user.password !== password) {
+        errorDiv?.classList.add('show');
+        errorDiv.textContent = '邮箱或密码错误';
+        debugLog('Login error: invalid credentials', 'error');
+        return;
+      }
+
+      currentUser = user;
+      isSubscriber = user.isSubscriber;
+      hideAuthModal();
+      updateUserUI();
+      updateUploadLimit();
+      showToast(`欢迎回来, ${user.name}!`);
+      debugLog(`Login successful: ${user.name}`, 'success');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      isSubscriber = false;
+      updateUserUI();
+      updateUploadLimit();
+      showToast('已退出登录');
+      debugLog('Logged out', 'info');
+    }
+
+    function updateUserUI() {
+      const userMenu = document.getElementById('user-menu');
+      const loginBtn = document.getElementById('login-btn');
+      const userName = document.getElementById('user-name');
+      const userStatus = document.getElementById('user-status');
+
+      if (currentUser) {
+        userMenu.style.display = 'block';
+        loginBtn.style.display = 'none';
+        userName.textContent = currentUser.name;
+        userStatus.style.display = currentUser.isSubscriber ? 'inline-block' : 'none';
+      } else {
+        userMenu.style.display = 'none';
+        loginBtn.style.display = 'inline-block';
+      }
+    }
+
+    function updateUploadLimit() {
+      const limitEl = document.getElementById('upload-limit');
+      if (isSubscriber) {
+        limitEl.textContent = '订阅用户：无限图片处理';
+        limitEl.style.color = '#86efac';
+      } else {
+        limitEl.textContent = `免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片`;
+        limitEl.style.color = '#fbbf24';
+      }
+    }
+
+    async function initDownloadPath() {
+      try {
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          downloadPath = await ipcRenderer.invoke('get-default-download-path');
+          document.getElementById('download-path').value = downloadPath;
+          debugLog(`Default download path: ${downloadPath}`, 'success');
+        }
+      } catch (e) {
+        debugLog(`Error getting download path: ${e.message}`, 'error');
+      }
+    }
+
+    async function selectDownloadPath() {
+      try {
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          const path = await ipcRenderer.invoke('select-download-path');
+          if (path) {
+            downloadPath = path;
+            document.getElementById('download-path').value = path;
+            showToast('下载路径已更新');
+            debugLog(`Download path set: ${path}`, 'success');
+          }
+        }
+      } catch (e) {
+        debugLog(`Error selecting download path: ${e.message}`, 'error');
+        showToast('选择路径失败', 'error');
+      }
+    }
+
+    function handleFileSelect(e) { 
+      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/')); 
+      debugLog(`Selected ${files.length} files`, 'info');
+      
+      if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
+        showToast(`免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片，请登录订阅账户获取无限处理权限`, 'error');
+        return;
+      }
+      if (!isSubscriber) {
+        selectedFiles = files.slice(0, MAX_FREE_IMAGES);
+      } else {
+        selectedFiles = files;
+      }
+      updatePreview(); 
+    }
+
+    function handleDrop(e) { 
+      e.preventDefault(); 
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')); 
+      debugLog(`Dropped ${files.length} files`, 'info');
+      
+      if (files.length > 0) { 
+        if (!isSubscriber && files.length > MAX_FREE_IMAGES) {
+          showToast(`免费用户每次最多上传 ${MAX_FREE_IMAGES} 张图片`, 'error');
+          return;
+        }
+        if (!isSubscriber) {
+          selectedFiles = files.slice(0, MAX_FREE_IMAGES);
+        } else {
+          selectedFiles = [...selectedFiles, ...files];
+        }
+        updatePreview(); 
+      } 
+    }
+
+    function updatePreview() {
+      const preview = document.getElementById('preview-container');
+      const emptyPreview = document.getElementById('empty-preview');
+      const processBtn = document.getElementById('process-btn');
+      const downloadBtn = document.getElementById('download-all-btn');
+
+      if (!preview || !emptyPreview || !processBtn || !downloadBtn) return;
+
+      if (selectedFiles.length > 0) {
+        preview.style.display = 'grid'; 
+        emptyPreview.style.display = 'none';
+        processBtn.disabled = false; 
+        downloadBtn.disabled = processedImages.length === 0;
+        
+        preview.innerHTML = '';
+        selectedFiles.slice(0, 10).forEach((file, i) => {
+          const item = document.createElement('div'); 
+          item.className = 'preview-item';
+          const img = document.createElement('img'); 
+          img.src = URL.createObjectURL(file);
+          const filename = document.createElement('span'); 
+          filename.textContent = file.name;
+          item.appendChild(img); 
+          item.appendChild(filename); 
+          preview.appendChild(item);
+        });
+        if (selectedFiles.length > 10) {
+          const more = document.createElement('div'); 
+          more.className = 'preview-item';
+          more.style.display = 'flex'; 
+          more.style.alignItems = 'center'; 
+          more.style.justifyContent = 'center'; 
+          more.style.color = '#71717a';
+          more.textContent = `+${selectedFiles.length - 10}`; 
+          preview.appendChild(more);
+        }
+      } else { 
+        preview.style.display = 'none'; 
+        emptyPreview.style.display = 'block'; 
+        processBtn.disabled = true; 
+        downloadBtn.disabled = true; 
+      }
+      debugLog(`Preview updated: ${selectedFiles.length} files`, 'info');
+    }
+
+    async function extractExif(file) {
+      debugLog(`Extracting EXIF from: ${file.name}`, 'info');
+      return new Promise((resolve) => {
+        try {
+          EXIF.getData(file, function() {
+            const result = { 
+              hasExif: false, 
+              gps: null, 
+              location: null, 
+              placeName: null, 
+              timestamp: null,
+              rawData: {}
+            };
+
+            try {
+              const allTags = EXIF.getAllTags(this);
+              result.rawData = allTags;
+              debugLog(`EXIF tags found: ${Object.keys(allTags).length}`, 'info');
+              
+              if (Object.keys(allTags).length > 0) {
+                result.hasExif = true;
+                
+                if (allTags.DateTime) {
+                  result.timestamp = allTags.DateTime;
+                  debugLog(`Timestamp found: ${result.timestamp}`, 'success');
+                } else if (allTags.DateTimeOriginal) {
+                  result.timestamp = allTags.DateTimeOriginal;
+                  debugLog(`Timestamp (original) found: ${result.timestamp}`, 'success');
+                }
+
+                if (allTags.GPSLatitude && allTags.GPSLongitude) {
+                  const lat = convertDMSToDD(allTags.GPSLatitude, allTags.GPSLatitudeRef);
+                  const lng = convertDMSToDD(allTags.GPSLongitude, allTags.GPSLongitudeRef);
+                  
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    result.gps = { lat, lng };
+                    result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    debugLog(`GPS coordinates found: ${result.location}`, 'success');
+                  } else {
+                    debugLog('Invalid GPS coordinates', 'error');
+                  }
+                } else {
+                  debugLog('No GPS data in EXIF', 'error');
+                }
+              } else {
+                debugLog('No EXIF data found', 'error');
+              }
+            } catch (parseError) {
+              debugLog(`Error parsing EXIF: ${parseError.message}`, 'error');
+            }
+
+            resolve(result);
+          });
+        } catch (e) {
+          debugLog(`EXIF extraction failed: ${e.message}`, 'error');
+          resolve({ hasExif: false, gps: null, location: null, placeName: null, timestamp: null });
+        }
+      });
+    }
+
+    function convertDMSToDD(degreesMinutesSeconds, ref) {
+      if (!degreesMinutesSeconds || !ref) {
+        debugLog('DMS conversion: missing data', 'error');
+        return NaN;
+      }
+
+      try {
+        const degrees = degreesMinutesSeconds[0].numerator / degreesMinutesSeconds[0].denominator;
+        const minutes = degreesMinutesSeconds[1].numerator / degreesMinutesSeconds[1].denominator;
+        const seconds = degreesMinutesSeconds[2].numerator / degreesMinutesSeconds[2].denominator;
+
+        let dd = degrees + minutes / 60 + seconds / 3600;
+        if (ref === 'S' || ref === 'W') dd = dd * -1;
+        
+        debugLog(`DMS converted: ${degrees}°${minutes}'${seconds}" ${ref} -> ${dd}`, 'success');
+        return dd;
+      } catch (e) {
+        debugLog(`DMS conversion error: ${e.message}`, 'error');
+        return NaN;
+      }
+    }
+
+    const geocodeCache = new Map();
+    
+    async function tryGeocodingService(url, params, timeout = 15000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      
+      try {
+        const response = await fetch(url + new URLSearchParams(params), {
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal,
+          mode: 'cors'
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+      } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+      }
+    }
+    
+    async function reverseGeocode(lat, lng) {
+      const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      debugLog(`Reverse geocoding: ${cacheKey}`, 'info');
+      
+      if (geocodeCache.has(cacheKey)) {
+        const cached = geocodeCache.get(cacheKey);
+        if (cached && !cached.startsWith(lat.toFixed(4))) {
+          debugLog('Using cached address result', 'success');
+          return cached;
+        }
+      }
+
+      updateLoadingStatus(`正在获取地址: ${lat.toFixed(4)}, ${lng.toFixed(4)}...`);
+      
+      const services = [
+        {
+          name: 'OpenStreetMap CN',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 18, addressdetails: 1, 'accept-language': 'zh-CN,zh' },
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          extract: (data) => {
+            if (data.display_name) return data.display_name;
+            if (data.address) {
+              const parts = [];
+              if (data.address.house_number) parts.push(data.address.house_number);
+              if (data.address.road) parts.push(data.address.road);
+              if (data.address.suburb) parts.push(data.address.suburb);
+              if (data.address.city) parts.push(data.address.city);
+              if (data.address.state) parts.push(data.address.state);
+              if (data.address.country) parts.push(data.address.country);
+              return parts.filter(Boolean).join(' ');
+            }
+            return null;
+          }
+        },
+        {
+          name: 'OpenStreetMap Alt',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 16, addressdetails: 1 },
+          extract: (data) => data.display_name || null
+        },
+        {
+          name: 'OpenStreetMap Basic',
+          url: 'https://nominatim.openstreetmap.org/reverse?',
+          params: { format: 'json', lat, lon: lng, zoom: 14, addressdetails: 0 },
+          extract: (data) => data.display_name || null
+        }
+      ];
+
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        debugLog(`Trying ${service.name} service...`, 'info');
+        
+        try {
+          const response = await tryGeocodingService(service.url, service.params);
+          const placeName = service.extract(response);
+          
+          if (placeName && placeName.trim()) {
+            geocodeCache.set(cacheKey, placeName);
+            debugLog(`${service.name} success: ${placeName.substring(0, 60)}`, 'success');
+            return placeName;
+          }
+        } catch (e) {
+          debugLog(`${service.name} failed: ${e.message}`, 'error');
+        }
+      }
+
+      const fallbackName = formatAddressFromCoords(lat, lng);
+      debugLog(`All services failed, using fallback: ${fallbackName}`, 'error');
+      return fallbackName;
+    }
+    
+    function formatAddressFromCoords(lat, lng) {
+      let address = '';
+      
+      if (lng >= 73.5 && lng <= 135 && lat >= 18 && lat <= 53) {
+        const regions = [
+          { name: '北京', minLat: 39.4, maxLat: 41.1, minLng: 115.4, maxLng: 117.5 },
+          { name: '上海', minLat: 30.5, maxLat: 31.8, minLng: 120.8, maxLng: 122.2 },
+          { name: '广州', minLat: 22.5, maxLat: 23.5, minLng: 112.5, maxLng: 114.5 },
+          { name: '深圳', minLat: 22.4, maxLat: 22.8, minLng: 113.7, maxLng: 114.3 },
+          { name: '杭州', minLat: 30.0, maxLat: 30.5, minLng: 120.0, maxLng: 120.4 },
+          { name: '成都', minLat: 30.4, maxLat: 31.2, minLng: 103.5, maxLng: 104.2 },
+          { name: '重庆', minLat: 29.1, maxLat: 30.4, minLng: 105.5, maxLng: 107.0 },
+          { name: '天津', minLat: 38.5, maxLat: 39.3, minLng: 116.7, maxLng: 117.5 },
+          { name: '南京', minLat: 31.5, maxLat: 32.2, minLng: 118.3, maxLng: 119.2 },
+          { name: '武汉', minLat: 30.3, maxLat: 30.8, minLng: 114.0, maxLng: 114.6 },
+          { name: '西安', minLat: 33.4, maxLat: 34.0, minLng: 108.7, maxLng: 109.3 },
+          { name: '青岛', minLat: 35.9, maxLat: 36.3, minLng: 120.2, maxLng: 120.5 },
+          { name: '大连', minLat: 38.7, maxLat: 39.5, minLng: 121.0, maxLng: 122.0 },
+          { name: '金州', minLat: 39.0, maxLat: 39.2, minLng: 121.6, maxLng: 121.9 },
+          { name: '沈阳', minLat: 41.6, maxLat: 42.0, minLng: 123.0, maxLng: 123.8 },
+          { name: '苏州', minLat: 31.2, maxLat: 31.4, minLng: 120.5, maxLng: 120.7 },
+          { name: '郑州', minLat: 34.6, maxLat: 34.9, minLng: 113.5, maxLng: 113.8 },
+          { name: '长沙', minLat: 28.0, maxLat: 28.3, minLng: 112.8, maxLng: 113.1 },
+          { name: '哈尔滨', minLat: 45.7, maxLat: 45.9, minLng: 126.5, maxLng: 126.7 },
+          { name: '合肥', minLat: 31.7, maxLat: 31.9, minLng: 117.1, maxLng: 117.3 },
+          { name: '福州', minLat: 26.0, maxLat: 26.1, minLng: 119.2, maxLng: 119.4 },
+          { name: '厦门', minLat: 24.4, maxLat: 24.5, minLng: 118.1, maxLng: 118.2 },
+          { name: '昆明', minLat: 24.9, maxLat: 25.1, minLng: 102.6, maxLng: 102.8 },
+          { name: '贵阳', minLat: 26.5, maxLat: 26.7, minLng: 106.7, maxLng: 106.9 },
+          { name: '南宁', minLat: 22.8, maxLat: 23.0, minLng: 108.2, maxLng: 108.4 },
+          { name: '石家庄', minLat: 38.0, maxLat: 38.1, minLng: 114.4, maxLng: 114.6 },
+          { name: '太原', minLat: 37.8, maxLat: 37.9, minLng: 112.5, maxLng: 112.6 },
+          { name: '呼和浩特', minLat: 40.8, maxLat: 40.9, minLng: 111.6, maxLng: 111.8 },
+          { name: '银川', minLat: 38.4, maxLat: 38.5, minLng: 106.2, maxLng: 106.3 },
+          { name: '兰州', minLat: 36.0, maxLat: 36.1, minLng: 103.8, maxLng: 103.9 },
+          { name: '西宁', minLat: 36.6, maxLat: 36.7, minLng: 101.7, maxLng: 101.8 },
+          { name: '乌鲁木齐', minLat: 43.8, maxLat: 43.9, minLng: 87.6, maxLng: 87.7 },
+          { name: '海口', minLat: 20.0, maxLat: 20.1, minLng: 110.3, maxLng: 110.4 },
+          { name: '三亚', minLat: 18.2, maxLat: 18.3, minLng: 109.5, maxLng: 109.6 },
+          { name: '鞍山', minLat: 40.8, maxLat: 41.2, minLng: 122.5, maxLng: 123.0 },
+          { name: '抚顺', minLat: 41.6, maxLat: 41.9, minLng: 123.5, maxLng: 124.2 },
+          { name: '本溪', minLat: 41.0, maxLat: 41.5, minLng: 123.5, maxLng: 124.5 },
+          { name: '丹东', minLat: 39.9, maxLat: 40.5, minLng: 124.0, maxLng: 124.5 },
+          { name: '锦州', minLat: 41.0, maxLat: 41.3, minLng: 120.8, maxLng: 121.5 },
+          { name: '营口', minLat: 40.2, maxLat: 40.7, minLng: 121.8, maxLng: 122.3 },
+          { name: '盘锦', minLat: 40.9, maxLat: 41.2, minLng: 121.5, maxLng: 122.2 },
+          { name: '铁岭', minLat: 42.0, maxLat: 42.5, minLng: 123.5, maxLng: 124.5 },
+          { name: '朝阳', minLat: 41.2, maxLat: 41.8, minLng: 119.5, maxLng: 120.5 },
+          { name: '葫芦岛', minLat: 40.3, maxLat: 41.0, minLng: 119.5, maxLng: 120.8 },
+          { name: '长春', minLat: 43.5, maxLat: 44.0, minLng: 125.0, maxLng: 125.8 },
+          { name: '吉林', minLat: 43.5, maxLat: 44.0, minLng: 126.3, maxLng: 127.0 },
+          { name: '四平', minLat: 43.0, maxLat: 43.5, minLng: 124.0, maxLng: 124.8 },
+          { name: '辽源', minLat: 42.5, maxLat: 43.0, minLng: 125.0, maxLng: 125.7 },
+          { name: '通化', minLat: 41.5, maxLat: 42.0, minLng: 125.5, maxLng: 126.2 },
+          { name: '白山', minLat: 41.5, maxLat: 42.2, minLng: 126.2, maxLng: 127.2 },
+          { name: '松原', minLat: 44.5, maxLat: 45.3, minLng: 124.0, maxLng: 125.5 },
+          { name: '白城', minLat: 45.0, maxLat: 45.8, minLng: 122.5, maxLng: 123.5 },
+          { name: '延边', minLat: 41.5, maxLat: 43.5, minLng: 128.0, maxLng: 131.0 },
+          { name: '济南', minLat: 36.4, maxLat: 36.8, minLng: 116.8, maxLng: 117.2 },
+          { name: '烟台', minLat: 37.2, maxLat: 37.8, minLng: 121.0, maxLng: 121.8 },
+          { name: '威海', minLat: 37.0, maxLat: 37.5, minLng: 121.8, maxLng: 122.5 },
+          { name: '潍坊', minLat: 36.4, maxLat: 36.9, minLng: 118.8, maxLng: 119.5 },
+          { name: '淄博', minLat: 36.5, maxLat: 36.9, minLng: 117.8, maxLng: 118.4 },
+          { name: '临沂', minLat: 34.8, maxLat: 35.5, minLng: 118.0, maxLng: 119.0 },
+          { name: '宁波', minLat: 29.8, maxLat: 30.0, minLng: 121.3, maxLng: 121.8 },
+          { name: '温州', minLat: 27.8, maxLat: 28.2, minLng: 120.4, maxLng: 121.0 },
+          { name: '无锡', minLat: 31.3, maxLat: 31.6, minLng: 120.0, maxLng: 120.5 },
+          { name: '佛山', minLat: 22.8, maxLat: 23.2, minLng: 112.8, maxLng: 113.2 },
+          { name: '珠海', minLat: 22.0, maxLat: 22.4, minLng: 113.2, maxLng: 113.8 },
+          { name: '东莞', minLat: 22.8, maxLat: 23.2, minLng: 113.5, maxLng: 114.0 },
+          { name: '中山', minLat: 22.4, maxLat: 22.8, minLng: 113.2, maxLng: 113.6 },
+        ];
+        
+        for (const region of regions) {
+          if (lat >= region.minLat && lat <= region.maxLat && lng >= region.minLng && lng <= region.maxLng) {
+            address = region.name + ' 附近';
+            break;
+          }
+        }
+        
+        if (!address) {
+          const provinces = [
+            { name: '黑龙江', minLat: 43, maxLat: 53, minLng: 121, maxLng: 135 },
+            { name: '吉林', minLat: 41, maxLat: 46, minLng: 121, maxLng: 131 },
+            { name: '辽宁', minLat: 38, maxLat: 43, minLng: 118, maxLng: 126 },
+            { name: '河北', minLat: 36, maxLat: 42, minLng: 113, maxLng: 119 },
+            { name: '河南', minLat: 31, maxLat: 36, minLng: 110, maxLng: 116 },
+            { name: '山东', minLat: 34, maxLat: 38, minLng: 114, maxLng: 123 },
+            { name: '山西', minLat: 34, maxLat: 40, minLng: 110, maxLng: 114 },
+            { name: '陕西', minLat: 31, maxLat: 39, minLng: 105, maxLng: 111 },
+            { name: '甘肃', minLat: 32, maxLat: 43, minLng: 92, maxLng: 109 },
+            { name: '青海', minLat: 31, maxLat: 39, minLng: 90, maxLng: 103 },
+            { name: '四川', minLat: 26, maxLat: 34, minLng: 97, maxLng: 109 },
+            { name: '云南', minLat: 21, maxLat: 29, minLng: 97, maxLng: 106 },
+            { name: '贵州', minLat: 24, maxLat: 29, minLng: 103, maxLng: 109 },
+            { name: '湖北', minLat: 29, maxLat: 33, minLng: 108, maxLng: 116 },
+            { name: '湖南', minLat: 24, maxLat: 30, minLng: 108, maxLng: 114 },
+            { name: '江西', minLat: 24, maxLat: 30, minLng: 113, maxLng: 118 },
+            { name: '安徽', minLat: 29, maxLat: 34, minLng: 114, maxLng: 119 },
+            { name: '浙江', minLat: 27, maxLat: 31, minLng: 118, maxLng: 123 },
+            { name: '福建', minLat: 23, maxLat: 28, minLng: 115, maxLng: 120 },
+            { name: '广东', minLat: 20, maxLat: 25, minLng: 109, maxLng: 118 },
+            { name: '广西', minLat: 20, maxLat: 26, minLng: 104, maxLng: 112 },
+            { name: '海南', minLat: 18, maxLat: 20, minLng: 108, maxLng: 111 },
+            { name: '内蒙古', minLat: 37, maxLat: 54, minLng: 97, maxLng: 126 },
+            { name: '新疆', minLat: 34, maxLat: 49, minLng: 73, maxLng: 96 },
+            { name: '西藏', minLat: 26, maxLat: 36, minLng: 78, maxLng: 99 },
+            { name: '宁夏', minLat: 35, maxLat: 39, minLng: 104, maxLng: 107 },
+            { name: '江苏', minLat: 30, maxLat: 35, minLng: 116, maxLng: 122 },
+            { name: '上海', minLat: 30, maxLat: 32, minLng: 120, maxLng: 122 },
+            { name: '北京', minLat: 39, maxLat: 41, minLng: 115, maxLng: 118 },
+            { name: '天津', minLat: 38, maxLat: 40, minLng: 116, maxLng: 118 },
+            { name: '重庆', minLat: 28, maxLat: 32, minLng: 105, maxLng: 110 },
+          ];
+          
+          for (const province of provinces) {
+            if (lat >= province.minLat && lat <= province.maxLat && lng >= province.minLng && lng <= province.maxLng) {
+              address = province.name + ' 境内';
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!address) {
+        address = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+      }
+      
+      return address;
+    }
+
+    function generateFilename(exifData, index) {
+      const date = exifData.timestamp ? exifData.timestamp.replace(/[:\s]/g, '') : 'UnknownDate';
+      return `${date}_${String(index + 1).padStart(3, '0')}.jpg`;
+    }
+
+    async function processImages() {
+      if (selectedFiles.length === 0) {
+        debugLog('No files to process', 'error');
+        return;
+      }
+      
+      showLoading(true, '正在处理图片...', '准备中...');
+      processedImages = [];
+      debugLog(`Starting to process ${selectedFiles.length} images`, 'info');
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        debugLog(`Processing image ${i + 1}/${selectedFiles.length}: ${file.name}`, 'info');
+        updateLoadingStatus(`正在处理 ${i + 1}/${selectedFiles.length}: ${file.name}`);
+
+        const exifData = await extractExif(file);
+        debugLog(`EXIF extraction complete for ${file.name}`, 'info');
+
+        if (exifData.gps) {
+          try {
+            debugLog(`Starting geocoding for ${file.name}`, 'info');
+            const placeName = await reverseGeocode(exifData.gps.lat, exifData.gps.lng);
+            if (placeName) {
+              exifData.placeName = placeName;
+              debugLog(`Geocoded place: ${placeName}`, 'success');
+            }
+          } catch (e) {
+            debugLog(`Geocoding failed: ${e.message}`, 'error');
+          }
+        } else {
+          debugLog(`No GPS data for ${file.name}, skipping geocoding`, 'error');
+        }
+
+        debugLog(`Creating canvas for ${file.name}`, 'info');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = URL.createObjectURL(file);
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height + 200;
+        ctx.drawImage(img, 0, 0);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(0, img.height, img.width, 200);
+
+        ctx.fillStyle = '#ffffff';
+        const fontSize = Math.max(32, Math.min(48, img.width / 18));
+        ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.textAlign = 'left';
+        
+        let locationText = exifData.placeName || exifData.location || 'Unknown Location';
+        
+        if (exifData.placeName && exifData.gps) {
+          locationText = `${exifData.placeName}`;
+        }
+        
+        locationText = locationText.length > 60 ? locationText.substring(0, 60) + '...' : locationText;
+        
+        debugLog(`Drawing text: ${locationText}`, 'info');
+        ctx.fillText(locationText, 25, img.height + fontSize + 15);
+        
+        const coordsText = `${exifData.gps?.lat?.toFixed(4)}°N, ${exifData.gps?.lng?.toFixed(4)}°E`;
+        ctx.font = `normal ${fontSize * 0.65}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+        ctx.fillStyle = '#a1a1aa';
+        ctx.fillText(coordsText, 25, img.height + fontSize + 20 + fontSize * 0.65 + 8);
+        
+        if (exifData.timestamp) {
+          ctx.font = `normal ${fontSize * 0.55}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+          ctx.fillStyle = '#888888';
+          ctx.fillText(exifData.timestamp, 25, img.height + fontSize + 20 + fontSize * 0.65 + 8 + fontSize * 0.55 + 6);
+        }
+
+        const annotatedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+        const annotatedFile = new File([annotatedBlob], generateFilename(exifData, i), { type: 'image/jpeg' });
+        processedImages.push({ file: annotatedFile, exifData });
+        
+        URL.revokeObjectURL(img.src);
+        debugLog(`Finished processing: ${file.name}`, 'success');
+      }
+
+      showLoading(false);
+      displayResults();
+      showToast('处理完成！');
+      debugLog('All images processed successfully!', 'success');
+    }
+
+    function displayResults() {
+      const resultsGrid = document.getElementById('results-grid');
+      const emptyResults = document.getElementById('empty-results');
+
+      if (!resultsGrid || !emptyResults) return;
+
+      if (processedImages.length > 0) {
+        resultsGrid.innerHTML = '';
+        emptyResults.style.display = 'none';
+
+        processedImages.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.innerHTML = `
+            <img src="${URL.createObjectURL(item.file)}" alt="${item.file.name}">
+            <div class="info">
+              <span class="name">${item.file.name}</span>
+              <div style="display: flex; gap: 6px;">
+                <button class="download-btn" data-index="${index}" title="下载">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                </button>
+                <button class="download-btn rename-btn" data-index="${index}" title="重命名">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+              </div>
+            </div>
+          `;
+          resultsGrid.appendChild(card);
+        });
+
+        document.querySelectorAll('.download-btn:not(.rename-btn)').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.dataset.index);
+            downloadImage(index);
+          });
+        });
+
+        document.querySelectorAll('.rename-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.currentTarget.dataset.index);
+            showRenameModal(index);
+          });
+        });
+      } else {
+        resultsGrid.innerHTML = '';
+        emptyResults.style.display = 'block';
+      }
+      
+      document.getElementById('download-all-btn').disabled = processedImages.length === 0;
+    }
+
+    function showRenameModal(index) {
+      renameIndex = index;
+      const item = processedImages[index];
+      const nameWithoutExt = item.file.name.replace(/\.[^/.]+$/, '');
+      document.getElementById('rename-input').value = nameWithoutExt;
+      document.getElementById('rename-modal').classList.add('show');
+    }
+
+    function hideRenameModal() {
+      document.getElementById('rename-modal').classList.remove('show');
+      renameIndex = -1;
+    }
+
+    function handleRename() {
+      if (renameIndex < 0) return;
+      const newName = document.getElementById('rename-input').value.trim();
+      if (!newName) {
+        showToast('请输入文件名', 'error');
+        return;
+      }
+      
+      const item = processedImages[renameIndex];
+      const newFile = new File([item.file], newName + '.jpg', { type: 'image/jpeg' });
+      processedImages[renameIndex] = { ...item, file: newFile };
+      
+      hideRenameModal();
+      displayResults();
+      showToast('文件名已更新');
+    }
+
+    async function downloadImage(index) {
+      const item = processedImages[index];
+      if (!item) return;
+
+      try {
+        if (window.require) {
+          const { ipcRenderer } = window.require('electron');
+          const buffer = await item.file.arrayBuffer();
+          const result = await ipcRenderer.invoke('save-image', {
+            buffer: Array.from(new Uint8Array(buffer)),
+            filename: item.file.name,
+            defaultPath: downloadPath
+          });
+          
+          if (result.success) {
+            showToast(`图片已保存到: ${result.path}`);
+            debugLog(`Image saved: ${result.path}`, 'success');
+          } else {
+            showToast('保存失败: ' + result.error, 'error');
+            debugLog(`Save failed: ${result.error}`, 'error');
+          }
+        } else {
+          const url = URL.createObjectURL(item.file);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = item.file.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 100);
+          showToast('图片已下载');
+          debugLog(`Image downloaded: ${item.file.name}`, 'success');
+        }
+      } catch (e) {
+        showToast('下载失败: ' + e.message, 'error');
+        debugLog(`Download error: ${e.message}`, 'error');
+      }
+    }
+
+    async function downloadAll() {
+      if (processedImages.length === 0) return;
+      
+      debugLog(`Starting batch download: ${processedImages.length} images`, 'info');
+      for (let i = 0; i < processedImages.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await downloadImage(i);
+      }
+      debugLog('Batch download complete', 'success');
+    }
+
+    function toggleDebug() {
+      debugMode = !debugMode;
+      const panel = document.getElementById('debug-panel');
+      if (panel) {
+        panel.classList.toggle('hidden', !debugMode);
+      }
+      showToast(debugMode ? '调试模式已开启' : '调试模式已关闭', 'info');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initDownloadPath();
+      
+      document.getElementById('login-btn')?.addEventListener('click', showAuthModal);
+      document.getElementById('auth-submit')?.addEventListener('click', handleLogin);
+      document.getElementById('user-logout')?.addEventListener('click', handleLogout);
+      document.getElementById('select-path-btn')?.addEventListener('click', selectDownloadPath);
+      document.getElementById('debug-toggle')?.addEventListener('click', toggleDebug);
+
+      const userBtn = document.getElementById('user-btn');
+      const userDropdown = document.getElementById('user-dropdown');
+      userBtn?.addEventListener('click', () => userDropdown?.classList.toggle('show'));
+
+      const uploadArea = document.getElementById('upload-area');
+      const fileInput = document.getElementById('file-input');
+
+      uploadArea?.addEventListener('click', () => fileInput?.click());
+      uploadArea?.addEventListener('dragover', (e) => { e.preventDefault(); });
+      uploadArea?.addEventListener('drop', handleDrop);
+      fileInput?.addEventListener('change', handleFileSelect);
+
+      document.getElementById('process-btn')?.addEventListener('click', processImages);
+      document.getElementById('download-all-btn')?.addEventListener('click', downloadAll);
+      document.getElementById('pro-subscribe')?.addEventListener('click', showAuthModal);
+
+      document.getElementById('rename-cancel')?.addEventListener('click', hideRenameModal);
+      document.getElementById('rename-confirm')?.addEventListener('click', handleRename);
+
+      document.addEventListener('click', (e) => {
+        if (!userBtn?.contains(e.target)) {
+          userDropdown?.classList.remove('show');
+        }
+      });
+
+      debugLog('Application initialized', 'success');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoStamp</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal">
+      <div class="login-content">
+        <div class="login-header">
+          <img src="/logo.jpg" alt="GeoStamp" height="48">
+          <h2>Welcome to GeoStamp</h2>
+          <p>Please login to continue</p>
+        </div>
+        
+        <div class="login-form">
+          <!-- Step 1: Email Input -->
+          <div id="login-step1">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="remember-me" checked>
+                <span>Remember me for 30 days</span>
+              </label>
+            </div>
+            <button class="btn btn-primary btn-block" id="send-code-btn">Send Verification Code</button>
+          </div>
+          
+          <!-- Step 2: Verification Code -->
+          <div id="login-step2" style="display: none;">
+            <div class="form-group">
+              <label for="verification-code">Verification Code</label>
+              <p class="hint">Enter the 6-digit code sent to <strong id="email-display"></strong></p>
+              <input type="text" id="verification-code" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+            </div>
+            <button class="btn btn-primary btn-block" id="verify-code-btn">Verify</button>
+            <button class="btn btn-text btn-block" id="resend-code-btn">Resend Code</button>
+          </div>
+          
+          <!-- Error Message -->
+          <div id="login-error" class="login-error" style="display: none;"></div>
+          
+          <!-- Loading Spinner -->
+          <div id="login-loading" class="login-loading" style="display: none;">
+            <div class="spinner-small"></div>
+            <span>Sending...</span>
+          </div>
+        </div>
+        
+        <div class="login-footer">
+          <p>Don't have an account? <a href="#">Sign up</a></p>
+        </div>
+      </div>
+    </div>
+    
+    <header>
+      <div class="logo">
+        <img src="/logo.jpg" alt="GeoStamp" height="32">
+        <span>GeoStamp</span>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="workspace">
+        <!-- Left: Upload Section (compact) -->
+        <div class="upload-section">
+          <div class="upload-header">
+            <h2>Upload Photos</h2>
+            <p class="subtitle">Drag & drop or click to select</p>
+          </div>
+          
+          <input type="file" id="file-input" accept="image/*" multiple>
+          <div class="upload-area" id="upload-area">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6L16 6a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p>Drop images here</p>
+          </div>
+
+          <div id="preview-container" class="preview-grid" style="display: none;"></div>
+          <div id="empty-preview" class="empty-state">
+            <p>No images selected</p>
+          </div>
+
+          <div class="action-buttons">
+            <button id="process-btn" class="btn btn-primary" disabled>Process</button>
+            <button id="download-all-btn" class="btn btn-secondary" disabled>Download All</button>
+          </div>
+        </div>
+
+        <!-- Right: Settings Panel (inline) -->
+        <div class="settings-panel">
+          <h3>Settings</h3>
+          
+          <div class="setting-group">
+            <label>Download Path:</label>
+            <div class="path-selector">
+              <input type="text" id="download-path" readonly>
+              <button class="btn-icon" id="select-path-btn" title="Browse...">📁</button>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <label>Filename Prefix:</label>
+            <select id="filename-prefix">
+              <option value="none">None</option>
+              <option value="time">Timestamp</option>
+              <option value="location">Location</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div class="setting-group" id="custom-prefix-row" style="display:none;">
+            <label>Custom Prefix:</label>
+            <input type="text" id="custom-prefix-input" placeholder="Enter prefix">
+          </div>
+
+          <div class="setting-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="keep-original-filename">
+              <span>Keep original filename</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-section" id="results-section">
+        <h2>Processed Images</h2>
+        <div id="results-grid" class="results-grid"></div>
+        <div id="empty-results" class="empty-state">
+          <p>Process images to see results</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+        <div class="loading-status" id="loading-status"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"><span id="toast-text"></span></div>
+    
+    <!-- User Info Bar (shown when logged in) -->
+    <div id="user-bar" class="user-bar" style="display: none;">
+      <div class="user-info">
+        <span class="user-email" id="user-email"></span>
+        <span class="subscription-badge" id="subscription-badge">Free</span>
+      </div>
+      <button class="btn btn-text btn-small" id="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

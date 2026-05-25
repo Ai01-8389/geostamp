@@ -1,0 +1,233 @@
+[2026-05-16T12:13:30.979Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T12:13:31.115Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T12:13:31.161Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T12:14:09.580Z] === Creating Creem checkout ===
+[2026-05-16T12:14:09.590Z] API Base: https://test-api.creem.io
+[2026-05-16T12:14:09.597Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T12:14:09.601Z] Product ID: geostamp
+[2026-05-16T12:14:09.606Z] Request body: {
+  "product_id": "geostamp",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "cancel_url": "http://localhost:3000/index-fixed.html",
+  "customer_email": "customer@example.com"
+}
+[2026-05-16T12:14:11.081Z] Response status: 400
+[2026-05-16T12:14:11.104Z] Response headers: {"date":["Sat, 16 May 2026 12:14:09 GMT"],"content-type":["application/json; charset=utf-8"],"content-length":["206"],"connection":["keep-alive"],"vary":["Origin"],"access-control-allow-credentials":["true"],"etag":["W/\"ce-YH+r7zqAmxTbW3hFnEZSnC+MVS0\""],"cf-cache-status":["DYNAMIC"],"nel":["{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"],"report-to":["{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=3igK5vSpcFXFj3FvuSZRI0NpQ2q45eZX%2F0e1vSkaNGebhoEhebU9WuVACR0BYKtSvf%2BEjf1td1syXDHVv%2FaECHE%2F9Qm9SNbM0p5fzk%2FURIzwLA6oN7lpNPz0EtvCpMY%2FIACw\"}]}"],"server":["cloudflare"],"cf-ray":["9fca4ce68dd1ceec-HKG"]}
+[2026-05-16T12:14:11.110Z] Response data: {
+  "trace_id": "ec215ce5-71d5-49f7-aa6e-f4bd4ad7a97f",
+  "status": 400,
+  "error": "Bad Request",
+  "message": [
+    "property cancel_url should not exist",
+    "property customer_email should not exist"
+  ],
+  "timestamp": 1778933649208
+}
+[2026-05-16T12:14:11.114Z] Creem API error: {"trace_id":"ec215ce5-71d5-49f7-aa6e-f4bd4ad7a97f","status":400,"error":"Bad Request","message":["property cancel_url should not exist","property customer_email should not exist"],"timestamp":1778933649208}
+[2026-05-16T12:14:11.116Z] ❌ Create checkout error: property cancel_url should not exist,property customer_email should not exist
+[2026-05-16T12:44:45.700Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T12:44:45.812Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T12:44:45.842Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T12:45:09.467Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T12:45:10.436Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T12:45:10.514Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T12:48:29.660Z] === Creating Creem checkout ===
+[2026-05-16T12:48:29.679Z] API Base: https://test-api.creem.io
+[2026-05-16T12:48:29.692Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T12:48:29.695Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T12:48:29.697Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html"
+}
+[2026-05-16T12:48:31.123Z] Response status: 200
+[2026-05-16T12:48:31.155Z] Response data: {
+  "id": "ch_LR2BZAcbGTpILUl0lIljK",
+  "object": "checkout",
+  "product": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "units": 1,
+  "status": "pending",
+  "checkout_url": "https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_LR2BZAcbGTpILUl0lIljK",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "mode": "test"
+}
+[2026-05-16T12:48:31.185Z] ✅ Checkout created successfully
+[2026-05-16T13:23:44.567Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:23:44.605Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:23:44.610Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:24:31.052Z] === Creating Creem checkout ===
+[2026-05-16T13:24:31.056Z] API Base: https://test-api.creem.io
+[2026-05-16T13:24:31.059Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:24:31.061Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:24:31.063Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "test_mode": true
+}
+[2026-05-16T13:24:32.755Z] Response status: 400
+[2026-05-16T13:24:32.762Z] Response data: {
+  "trace_id": "322590bc-bbbe-43a1-8718-f4fa449b0c7d",
+  "status": 400,
+  "error": "Bad Request",
+  "message": [
+    "property test_mode should not exist"
+  ],
+  "timestamp": 1778937870626
+}
+[2026-05-16T13:24:32.765Z] Creem API error: {"trace_id":"322590bc-bbbe-43a1-8718-f4fa449b0c7d","status":400,"error":"Bad Request","message":["property test_mode should not exist"],"timestamp":1778937870626}
+[2026-05-16T13:24:32.780Z] ❌ Create checkout error: property test_mode should not exist
+[2026-05-16T13:24:39.391Z] === Creating Creem checkout ===
+[2026-05-16T13:24:39.396Z] API Base: https://test-api.creem.io
+[2026-05-16T13:24:39.419Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:24:39.422Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:24:39.424Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "test_mode": true
+}
+[2026-05-16T13:24:40.624Z] Response status: 400
+[2026-05-16T13:24:40.643Z] Response data: {
+  "trace_id": "e68cd172-4a24-4371-9512-cd63213488de",
+  "status": 400,
+  "error": "Bad Request",
+  "message": [
+    "property test_mode should not exist"
+  ],
+  "timestamp": 1778937877877
+}
+[2026-05-16T13:24:40.650Z] Creem API error: {"trace_id":"e68cd172-4a24-4371-9512-cd63213488de","status":400,"error":"Bad Request","message":["property test_mode should not exist"],"timestamp":1778937877877}
+[2026-05-16T13:24:40.686Z] ❌ Create checkout error: property test_mode should not exist
+[2026-05-16T13:29:28.586Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:29:28.748Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:29:28.761Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:29:41.237Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:29:41.432Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:29:41.433Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:30:12.950Z] === Creating Creem checkout ===
+[2026-05-16T13:30:12.963Z] API Base: https://test-api.creem.io
+[2026-05-16T13:30:12.965Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:30:12.969Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:30:12.970Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "test_mode": true
+}
+[2026-05-16T13:30:14.529Z] Response status: 400
+[2026-05-16T13:30:14.669Z] Response data: {
+  "trace_id": "9baac218-337c-420d-992a-3e54cbab7ea1",
+  "status": 400,
+  "error": "Bad Request",
+  "message": [
+    "property test_mode should not exist"
+  ],
+  "timestamp": 1778938212350
+}
+[2026-05-16T13:30:14.687Z] Creem API error: {"trace_id":"9baac218-337c-420d-992a-3e54cbab7ea1","status":400,"error":"Bad Request","message":["property test_mode should not exist"],"timestamp":1778938212350}
+[2026-05-16T13:30:14.716Z] ❌ Create checkout error: property test_mode should not exist
+[2026-05-16T13:30:37.233Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:30:37.252Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:30:37.255Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:30:56.556Z] === Creating Creem checkout ===
+[2026-05-16T13:30:56.560Z] API Base: https://test-api.creem.io
+[2026-05-16T13:30:56.563Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:30:56.573Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:30:56.576Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "test_mode": true
+}
+[2026-05-16T13:30:57.909Z] Response status: 400
+[2026-05-16T13:30:57.936Z] Response data: {
+  "trace_id": "95c3ac75-2aa5-444d-9e7b-dcdc1dcba1fb",
+  "status": 400,
+  "error": "Bad Request",
+  "message": [
+    "property test_mode should not exist"
+  ],
+  "timestamp": 1778938255746
+}
+[2026-05-16T13:30:57.975Z] Creem API error: {"trace_id":"95c3ac75-2aa5-444d-9e7b-dcdc1dcba1fb","status":400,"error":"Bad Request","message":["property test_mode should not exist"],"timestamp":1778938255746}
+[2026-05-16T13:30:57.996Z] ❌ Create checkout error: property test_mode should not exist
+[2026-05-16T13:35:46.285Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:35:46.314Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:35:46.316Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:36:11.658Z] === Creating Creem checkout ===
+[2026-05-16T13:36:11.667Z] API Base: https://test-api.creem.io
+[2026-05-16T13:36:11.670Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:36:11.682Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:36:11.683Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html"
+}
+[2026-05-16T13:36:13.383Z] Response status: 200
+[2026-05-16T13:36:13.391Z] Response data: {
+  "id": "ch_66sZCZVJ0nqYWUhKacc2g6",
+  "object": "checkout",
+  "product": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "units": 1,
+  "status": "pending",
+  "checkout_url": "https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_66sZCZVJ0nqYWUhKacc2g6",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "mode": "test"
+}
+[2026-05-16T13:36:13.393Z] ✅ Checkout created successfully
+[2026-05-16T13:36:13.396Z] Original checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_66sZCZVJ0nqYWUhKacc2g6
+[2026-05-16T13:36:13.407Z] Final checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_66sZCZVJ0nqYWUhKacc2g6
+[2026-05-16T13:37:39.133Z] Verifying Creem session: ch_66sZCZVJ0nqYWUhKacc2g6
+[2026-05-16T13:37:40.464Z] Verification API error: {"statusCode":500,"timestamp":"2026-05-16T13:37:38.263Z","path":"/v1/checkouts/verify?session_id=ch_66sZCZVJ0nqYWUhKacc2g6"}
+[2026-05-16T13:37:40.564Z] Verify payment error: Verification failed
+[2026-05-16T13:42:49.987Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:42:50.068Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:42:50.076Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:43:12.977Z] === Creating Creem checkout ===
+[2026-05-16T13:43:12.997Z] API Base: https://test-api.creem.io
+[2026-05-16T13:43:12.999Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:43:13.001Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:43:13.009Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html"
+}
+[2026-05-16T13:43:14.603Z] Response status: 200
+[2026-05-16T13:43:14.612Z] Response data: {
+  "id": "ch_6CKR1xz6a3zPUtxyDHc8yQ",
+  "object": "checkout",
+  "product": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "units": 1,
+  "status": "pending",
+  "checkout_url": "https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_6CKR1xz6a3zPUtxyDHc8yQ",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "mode": "test"
+}
+[2026-05-16T13:43:14.614Z] ✅ Checkout created successfully
+[2026-05-16T13:43:14.620Z] Original checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_6CKR1xz6a3zPUtxyDHc8yQ
+[2026-05-16T13:43:14.623Z] Final checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_6CKR1xz6a3zPUtxyDHc8yQ
+[2026-05-16T13:44:39.392Z] Verifying Creem session: ch_6CKR1xz6a3zPUtxyDHc8yQ
+[2026-05-16T13:44:40.972Z] Verification API error: {"statusCode":500,"timestamp":"2026-05-16T13:44:38.567Z","path":"/v1/checkouts/ch_6CKR1xz6a3zPUtxyDHc8yQ"}
+[2026-05-16T13:44:41.046Z] Verify payment error: Verification failed
+[2026-05-16T13:50:39.397Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T13:50:39.457Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T13:50:39.464Z] 🔑 Creem API configured (Test Mode)
+[2026-05-16T13:50:57.475Z] === Creating Creem checkout ===
+[2026-05-16T13:50:57.485Z] API Base: https://test-api.creem.io
+[2026-05-16T13:50:57.487Z] API Key (first 20 chars): creem_test_49RRd3OZf...
+[2026-05-16T13:50:57.491Z] Product ID: prod_52YqViVwDNmYS5BOhcxVfV
+[2026-05-16T13:50:57.492Z] Request body: {
+  "product_id": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "success_url": "http://localhost:3000/index-fixed.html"
+}
+[2026-05-16T13:50:59.104Z] Response status: 200
+[2026-05-16T13:50:59.112Z] Response data: {
+  "id": "ch_5MKCjgBrQXLs2tjySZKMYs",
+  "object": "checkout",
+  "product": "prod_52YqViVwDNmYS5BOhcxVfV",
+  "units": 1,
+  "status": "pending",
+  "checkout_url": "https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_5MKCjgBrQXLs2tjySZKMYs",
+  "success_url": "http://localhost:3000/index-fixed.html",
+  "mode": "test"
+}
+[2026-05-16T13:50:59.115Z] ✅ Checkout created successfully
+[2026-05-16T13:50:59.117Z] Original checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_5MKCjgBrQXLs2tjySZKMYs
+[2026-05-16T13:50:59.125Z] Final checkout_url: https://creem.io/test/checkout/prod_52YqViVwDNmYS5BOhcxVfV/ch_5MKCjgBrQXLs2tjySZKMYs
+[2026-05-16T22:38:46.689Z] ✅ GeoStamp server running at http://localhost:3000
+[2026-05-16T22:38:46.692Z] 📄 Open http://localhost:3000/index-fixed.html in your browser
+[2026-05-16T22:38:46.693Z] 🔑 Creem API configured (Test Mode)
