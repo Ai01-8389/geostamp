@@ -1083,10 +1083,10 @@
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-links">
-        <a href="#" onclick="showComplianceModal('privacy'); return false;">Privacy Policy</a>
-        <a href="#" onclick="showComplianceModal('terms'); return false;">Terms of Service</a>
-        <a href="#" onclick="showComplianceModal('cookie'); return false;">Cookie Policy</a>
-        <a href="#" onclick="showComplianceModal('refund'); return false;">Refund Policy</a>
+        <a href="#privacy" onclick="showComplianceModal('privacy'); return false;">Privacy Policy</a>
+        <a href="#terms" onclick="showComplianceModal('terms'); return false;">Terms of Service</a>
+        <a href="#cookie" onclick="showComplianceModal('cookie'); return false;">Cookie Policy</a>
+        <a href="#refund" onclick="showComplianceModal('refund'); return false;">Refund Policy</a>
         <a href="mailto:contact@geostamp.top">Contact Us</a>
       </div>
       <div class="footer-copyright">© 2024 GeoStamp. All rights reserved.</div>
@@ -2158,6 +2158,16 @@
           if (e.target === overlay) closeComplianceModal();
         });
       }
+      // Listen for hash changes — support direct URL access to policies
+      window.addEventListener('hashchange', handlePolicyHash);
+    }
+
+    function handlePolicyHash() {
+      const hash = window.location.hash.slice(1); // remove '#'
+      const valid = ['privacy', 'terms', 'cookie', 'refund'];
+      if (valid.includes(hash)) {
+        showComplianceModal(hash);
+      }
     }
 
     async function initiateCreemPayment(event) {
@@ -2594,6 +2604,7 @@
 
 
       initComplianceOverlay();
+      handlePolicyHash(); // open policy modal if URL has a matching hash
       
       verifyCreemPayment();
       
