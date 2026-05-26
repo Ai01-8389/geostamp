@@ -2149,6 +2149,9 @@
     function closeComplianceModal() {
       const overlay = document.getElementById('compliance-modal-overlay');
       if (overlay) overlay.classList.remove('show');
+      if (window.location.hash) {
+        window.location.hash = '';
+      }
     }
 
     function initComplianceOverlay() {
