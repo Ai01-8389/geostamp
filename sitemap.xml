@@ -7,6 +7,12 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://geostamp.top/blog/</loc>
+    <lastmod>2026-06-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://geostamp.top/blog/how-to-add-gps-location-to-photos/</loc>
     <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
