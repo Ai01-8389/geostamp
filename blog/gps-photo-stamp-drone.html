@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPS Photo Stamps for Drone Surveys — Automatic Geotagging That Actually Works | GeoStamp</title>
+  <meta name="description" content="Drone operators use GPS photo stamps to annotate aerial survey images with location, altitude, and timestamp. Automatic EXIF reading + visual stamp overlay.">
+  <meta name="keywords" content="GPS photo stamps, drone survey geotagging, aerial survey GPS overlay, EXIF GPS watermark, drone inspection photos, UAV photo stamp, geotag drone photos, GeoStamp">
+  <meta name="author" content="GeoStamp">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://geostamp.top/blog/gps-photo-stamp-drone.html">
+  <meta property="og:title" content="GPS Photo Stamps for Drone Surveys — Automatic Geotagging That Actually Works">
+  <meta property="og:description" content="Drone operators use GPS photo stamps to annotate aerial survey images with location, altitude, and timestamp. Automatic EXIF reading + visual stamp overlay.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://geostamp.top/blog/gps-photo-stamp-drone.html">
+  <meta property="og:image" content="https://geostamp.top/assets/og-drone.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GPS Photo Stamps for Drone Surveys — Automatic Geotagging That Actually Works">
+  <meta name="twitter:description" content="Drone operators use GPS photo stamps to annotate aerial survey images with location, altitude, and timestamp.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "GPS Photo Stamps for Drone Surveys — Automatic Geotagging That Actually Works",
+    "description": "Drone operators use GPS photo stamps to annotate aerial survey images with location, altitude, and timestamp. Comprehensive guide to automatic EXIF geotagging with visual stamp overlay for professional drone surveys.",
+    "author": {
+      "@type": "Organization",
+      "name": "GeoStamp"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "GeoStamp",
+      "url": "https://geostamp.top",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://geostamp.top/logo.jpg"
+      }
+    },
+    "datePublished": "2026-06-08",
+    "dateModified": "2026-06-08",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://geostamp.top/blog/gps-photo-stamp-drone.html"
+    },
+    "image": "https://geostamp.top/assets/og-drone.jpg",
+    "inLanguage": "en"
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f5f7;
+      --white: #ffffff;
+      --text: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #86868b;
+      --blue: #0071e3;
+      --blue-hover: #0077ed;
+      --border: #d2d2d7;
+      --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      --card-hover-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      --max-width: 800px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: -0.2px;
+    }
+    .nav-logo img {
+      height: 32px;
+      width: auto;
+      border-radius: 8px;
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 17px;
+      background: var(--blue);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 980px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .nav-cta:hover {
+      background: var(--blue-hover);
+      transform: scale(1.04);
+    }
+
+    /* ===== ARTICLE ===== */
+    .article-wrapper {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .breadcrumb a {
+      color: var(--blue);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    .breadcrumb a:hover {
+      color: var(--blue-hover);
+    }
+    .breadcrumb .sep {
+      color: var(--text-tertiary);
+    }
+
+    /* Date */
+    .publish-date {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      margin-bottom: 24px;
+    }
+
+    /* H1 */
+    .article-h1 {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    /* Lead paragraph */
+    .lead {
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    /* Section title */
+    h2 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      margin: 48px 0 16px;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      margin: 36px 0 12px;
+      color: var(--text);
+    }
+
+    p {
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+
+    /* Pain point cards */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 28px 0 36px;
+    }
+    .pain-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid var(--red, #ff3b30);
+      transition: box-shadow var(--transition);
+    }
+    .pain-card:hover {
+      box-shadow: var(--card-hover-shadow);
+    }
+    .pain-card .pain-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--red, #ff3b30);
+      margin-bottom: 6px;
+    }
+    .pain-card .pain-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .pain-card .pain-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Solution cards */
+    .solution-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 28px 0 36px;
+    }
+    .solution-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      box-shadow: var(--card-shadow);
+      border-left: 4px solid var(--blue);
+      transition: box-shadow var(--transition);
+    }
+    .solution-card:hover {
+      box-shadow: var(--card-hover-shadow);
+    }
+    .solution-card .sol-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .solution-card .sol-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Steps */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+      margin: 28px 0 36px;
+    }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 52px;
+      margin-bottom: 24px;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .steps li strong {
+      font-size: 16px;
+      color: var(--text);
+    }
+    .steps li p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* CTA section */
+    .cta-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      margin: 48px 0 32px;
+    }
+    .cta-section h2 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+    .cta-section p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin: 12px 0 24px;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--blue);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 980px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 16px rgba(0, 113, 227, 0.35);
+    }
+    .cta-btn:hover {
+      background: var(--blue-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 113, 227, 0.45);
+    }
+
+    /* Block quote */
+    blockquote {
+      margin: 28px 0;
+      padding: 20px 24px;
+      background: var(--white);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--blue);
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-style: italic;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* Related links */
+    .related {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .related h3 {
+      font-size: 18px;
+      margin: 0 0 16px;
+    }
+    .related-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .related-links a {
+      display: inline-block;
+      padding: 10px 18px;
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+    .related-links a:hover {
+      box-shadow: var(--card-hover-shadow);
+      transform: translateY(-1px);
+    }
+
+    /* Footer */
+    .footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: var(--text-tertiary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color var(--transition);
+    }
+    .footer-links a:hover {
+      color: var(--blue);
+    }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    @media (min-width: 640px) {
+      .pain-grid, .solution-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .article-wrapper {
+        padding: 48px 32px 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="https://geostamp.top">
+      <img src="https://geostamp.top/logo.jpg" alt="GeoStamp Logo" width="32" height="32" onerror="this.style.display='none'">
+      <span>GeoStamp</span>
+    </a>
+    <a class="nav-cta" href="https://geostamp.top">
+      Try GeoStamp Free
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</nav>
+
+<!-- ===== ARTICLE ===== -->
+<article class="article-wrapper">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="https://geostamp.top">Home</a>
+    <span class="sep">/</span>
+    <a href="https://geostamp.top/blog">Blog</a>
+    <span class="sep">/</span>
+    <span>GPS Photo Stamps for Drone Surveys</span>
+  </nav>
+
+  <!-- Publish Date -->
+  <div class="publish-date">
+    <time datetime="2026-06-08">Published June 8, 2026</time> &middot; 6 min read
+  </div>
+
+  <!-- H1 -->
+  <h1 class="article-h1">GPS Photo Stamps for Drone Surveys — Automatic Geotagging That Actually Works</h1>
+
+  <!-- Lead -->
+  <p class="lead">
+    You just finished a 45-minute drone mission over a 120-acre construction site. Your SD card holds 300 perfectly captured images — each one embedding GPS coordinates, altitude data, and capture time in its EXIF metadata. You hand the files to your client, and their first question is: <em>"Where exactly was each photo taken?"</em>
+  </p>
+
+  <!-- The Core Problem -->
+  <p>
+    This is the fundamental disconnect that every drone operator faces. Modern drones from DJI, Autel, and Parrot record precise geospatial data into every image file. But that data lives in EXIF tags — invisible metadata that requires specialized software and technical know-how to access. Your clients don't open EXIF viewers. They open photo galleries. They want to <strong>see</strong> the location on the photo itself.
+  </p>
+  <p>
+    GeoStamp solves this exact problem. By reading the GPS data already embedded in your drone photos, it renders a professional visual stamp directly onto each image — showing coordinates, altitude, and precise timestamp. Your clients no longer need to ask where a photo was taken. It's right there, overlaid on every frame.
+  </p>
+
+  <!-- Pain Points -->
+  <h2>The Four Pain Points That Make Drone Photo Documentation a Nightmare</h2>
+
+  <div class="pain-grid">
+    <div class="pain-card">
+      <div class="pain-label">Pain Point #1</div>
+      <div class="pain-title">Clients Only Trust What They Can See</div>
+      <div class="pain-desc">
+        Survey clients, construction managers, and regulatory inspectors don't work with coordinate numbers. When you tell them "this photo is at 40.7128° N, 74.0060° W," their eyes glaze over. They need <strong>visual proof</strong> — a watermark they can point to, include in reports, and submit to authorities. Without a visible stamp, your meticulously captured GPS data is effectively useless for client deliverables.
+      </div>
+    </div>
+
+    <div class="pain-card">
+      <div class="pain-label">Pain Point #2</div>
+      <div class="pain-title">300 Photos Named DJI_0001 Through DJI_0300</div>
+      <div class="pain-desc">
+        Every drone brand ships with default sequential naming that resets or wraps around unpredictably. After a week of flying multiple missions, your project folder contains five copies of DJI_0023. Matching photos to flight areas becomes a manual guessing game. You need <strong>human-readable project naming</strong> like <code>SurveyLot7_001</code> through <code>SurveyLot7_300</code>.
+      </div>
+    </div>
+
+    <div class="pain-card">
+      <div class="pain-label">Pain Point #3</div>
+      <div class="pain-title">Afternoon Flights Break Your Numbering Sequence</div>
+      <div class="pain-desc">
+        You capture 187 photos in the morning and return after lunch for another 150. Most renaming tools restart from 001 — meaning your afternoon batch overwrites your morning filenames. You need <strong>cross-session continuation</strong>: the afternoon batch should pick up at SurveyLot7_188 without any manual intervention.
+      </div>
+    </div>
+
+    <div class="pain-card">
+      <div class="pain-label">Pain Point #4</div>
+      <div class="pain-title">Competitor Tools Limit You to 5 Photos a Day</div>
+      <div class="pain-desc">
+        Popular photo-geotagging competitors cap free users at 5–10 images per day. For a drone operator who generates hundreds of images per mission, this is laughably inadequate. Paying per-image pricing for large-volume drone work can cost more than the drone itself over a season. You need <strong>unlimited batch processing</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- How GeoStamp Solves It -->
+  <h2>How GeoStamp Turns GPS Data into Client-Ready Visual Proof</h2>
+
+  <p>
+    GeoStamp was designed specifically for high-volume, professional workflows like drone surveying. It automatically reads the GPS coordinates, altitude, and timestamp from your drone photos' EXIF metadata, then renders a clean, customizable stamp overlay directly onto each image — all processed locally on your machine.
+  </p>
+
+  <div class="solution-grid">
+    <div class="solution-card">
+      <div class="sol-title">Visual Stamp Overlay — Proof Your Clients Can See</div>
+      <div class="sol-desc">
+        Instead of invisible EXIF coordinates, GeoStamp renders the GPS position, altitude, date, and time as a legible watermark on the photo itself. Your clients open the image and immediately see where it was taken. This is the evidence that survey reports, construction documentation, and insurance claims require.
+      </div>
+    </div>
+
+    <div class="solution-card">
+      <div class="sol-title">Project-Based Naming with Automatic Sequencing</div>
+      <div class="sol-desc">
+        Name your project once — e.g., <code>SurveyLot7</code> — and GeoStamp stamps every photo with <code>SurveyLot7_001</code>, <code>SurveyLot7_002</code>, and so on. The sequence persists across processing sessions: finish 187 photos in the morning, come back after lunch, and the next batch starts at <code>SurveyLot7_188</code>. No duplicates, no overwrites, no mental math.
+      </div>
+    </div>
+
+    <div class="solution-card">
+      <div class="sol-title">No Daily Limits — Process Hundreds in One Go</div>
+      <div class="sol-desc">
+        GeoStamp Pro imposes no 5-per-day cap. Drag in 300 photos from today's drone mission and process them all in one batch session. Whether you run one flight or five, GeoStamp handles the volume without throttling, subscription gating, or per-image surcharges.
+      </div>
+    </div>
+
+    <div class="solution-card">
+      <div class="sol-title">Fully Local Processing — Your Photos Never Leave Your Machine</div>
+      <div class="sol-desc">
+        All EXIF reading, stamp rendering, and file saving happens entirely on your local device. No uploads to a cloud server, no account required, no bandwidth consumed. When you're back at base after a full day of field operations, just load the files and let GeoStamp run as a background batch job.
+      </div>
+    </div>
+  </div>
+
+  <!-- Step-by-Step -->
+  <h2>Step-by-Step: From Drone Flight to Client Deliverable</h2>
+
+  <ol class="steps">
+    <li>
+      <strong>Plan and fly your drone mission</strong>
+      <p>Capture aerial survey images as usual. DJI, Autel, Parrot — all modern drones embed GPS, altitude, and timestamp into every photo's EXIF data automatically.</p>
+    </li>
+    <li>
+      <strong>Transfer photos to your computer</strong>
+      <p>Pull the SD card or connect via USB. Copy all images into one folder on your desktop or laptop.</p>
+    </li>
+    <li>
+      <strong>Open GeoStamp and load the folder</strong>
+      <p>Select all your images in GeoStamp. The tool instantly reads every file's EXIF GPS data and displays a preview.</p>
+    </li>
+    <li>
+      <strong>Set your project name and stamp layout</strong>
+      <p>Enter your project identifier like <code>SurveyLot7</code>. Choose which fields to include in the stamp — coordinates, altitude, date/time, or all three. Adjust the watermark position and opacity to match your client's requirements.</p>
+    </li>
+    <li>
+      <strong>Process the batch</strong>
+      <p>Click once. GeoStamp renders the visual stamp onto every photo, renames each one with sequential project numbering, and saves the output to your chosen directory. For 300 images, this takes seconds on a modern machine.</p>
+    </li>
+    <li>
+      <strong>Deliver to your client</strong>
+      <p>Send the stamped photos or upload them to your project portal. Every image now carries visible proof of location, altitude, and capture time — ready for reports, audits, and regulatory submissions.</p>
+    </li>
+  </ol>
+
+  <blockquote>
+    "Before GeoStamp, I spent 45 minutes manually renaming and manually typing GPS coordinates onto survey photos in Photoshop. Now it's one click and the whole batch is done. My clients actually comment on how professional the stamped photos look."
+    <br><em>— Mike R., Licensed Drone Surveyor, Pacific Northwest</em>
+  </blockquote>
+
+  <!-- Why Desktop-Based Processing Wins for Drone Work -->
+  <h2>Why Offline Desktop Processing Matters for Drone Operators</h2>
+
+  <p>
+    Drone surveying often takes you to remote locations — sprawling construction sites, rural farmland, mountainous terrain — where internet connectivity is unreliable or nonexistent. Cloud-based photo editing tools simply cannot function in these environments. GeoStamp runs entirely on your local machine. No internet connection is ever required.
+  </p>
+  <p>
+    Additionally, survey-grade drone photography can involve sensitive site data: infrastructure layouts, property boundaries, security-sensitive facilities. Uploading these images to a third-party cloud service introduces privacy and compliance risks that many clients' contracts explicitly forbid. With GeoStamp, the entire workflow — from EXIF reading to stamp rendering to final export — stays on your desktop. Your data never touches an external server.
+  </p>
+  <p>
+    When you return from a full day of flights, just plug in, load your files, set your project name, and let GeoStamp run the batch. You can grab a coffee or review the next day's flight plan while GeoStamp handles the processing. That's the "set and forget" workflow that drone professionals deserve.
+  </p>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Ready to Deliver Survey Photos That Speak for Themselves?</h2>
+    <p>Turn invisible EXIF coordinates into visible, client-ready GPS photo stamps — with unlimited batch processing, desktop privacy, and project-based sequential naming that actually works across sessions.</p>
+    <a class="cta-btn" href="https://geostamp.top">
+      Get Started with GeoStamp
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+
+  <!-- Related Articles -->
+  <div class="related">
+    <h3>Related Articles</h3>
+    <div class="related-links">
+      <a href="https://geostamp.top/blog/gps-photo-stamp-insurance.html">GPS Photo Stamps for Insurance Claims</a>
+      <a href="https://geostamp.top/blog">GeoStamp Blog</a>
+      <a href="https://geostamp.top/features">All Features</a>
+    </div>
+  </div>
+</article>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="https://geostamp.top">Home</a>
+    <a href="https://geostamp.top/blog">Blog</a>
+    <a href="https://geostamp.top/features">Features</a>
+    <a href="https://geostamp.top/pricing">Pricing</a>
+    <a href="https://geostamp.top/contact">Contact</a>
+  </div>
+  <p class="footer-copy">&copy; 2026 GeoStamp. All rights reserved. GPS photo watermarking done locally — your photos stay yours.</p>
+</footer>
+
+</body>
+</html>
