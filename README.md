@@ -45,6 +45,10 @@ Or download the desktop app for batch processing:
 | Total processing | ✅ Casual use | ✅ Virtually unlimited |
 | Watermark quality | Standard | HD |
 
+## Related
+
+Turn your photo memories into narrated stories with [ThatDay](https://thatday.vip).
+
 ### Live Site
 https://ai01-8389.github.io/geostamp/
 
