@@ -1015,8 +1015,8 @@
         <p style="font-size:14px;color:#6E6E73;margin:0;">GPS data rendered directly onto your photo as a clean location badge — not a sidebar of numbers you have to copy-paste somewhere else.</p>
       </div>
       <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:280px;">
-        <strong style="font-size:16px;display:block;margin-bottom:8px;">No Artificial Limits</strong>
-        <p style="font-size:14px;color:#6E6E73;margin:0;">Pro plan handles real-world volumes — construction projects, drone surveys, and photo archives with thousands of images. No daily caps, no batch quotas.</p>
+        <strong style="font-size:16px;display:block;margin-bottom:8px;">Free Daily Quota</strong>
+        <p style="font-size:14px;color:#6E6E73;margin:0;">Free users get 3 images/day on web. Unlimited for desktop app users. Pro plan removes all limits — no daily caps, no batch quotas.</p>
       </div>
       <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:280px;">
         <strong style="font-size:16px;display:block;margin-bottom:8px;">Persistent Sequential Naming</strong>
@@ -1072,6 +1072,7 @@
           </div>
           <h3 id="upload-title">Drop images here</h3>
           <p id="upload-desc">or click to browse</p>
+          <div id="daily-limit" style="font-size:12px;color:#86868B;margin-top:8px;display:none;"></div>
         </div>
         <div id="preview-container" class="preview-grid" style="display: none;"></div>
         <div id="empty-preview"><p id="empty-preview-text">No images selected</p></div>
@@ -1311,8 +1312,49 @@
 
     let isSubscriber = false;
     let MAX_FREE_IMAGES = 1;
+    let DAILY_REMAINING = null;
     let persistentFileCounter = 1;
     const geocodeCache = new Map();
+    const DAILY_API = 'https://api.geostamp.top';
+    
+    async function checkDailyLimit() {
+      const token = localStorage.getItem('access_token');
+      if (!token) { document.getElementById('daily-limit').style.display = 'none'; return; }
+      try {
+        const res = await fetch(DAILY_API + '/api/usage/check', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success) {
+          DAILY_REMAINING = data.remaining;
+          const el = document.getElementById('daily-limit');
+          if (!data.isPro) {
+            el.textContent = 'Today: ' + data.usedToday + '/' + data.dailyLimit + ' images processed';
+            el.style.display = 'block';
+            if (data.remaining <= 0) {
+              el.style.color = '#FF3B30';
+              el.textContent += ' (limit reached — sign in with Pro)';
+            } else {
+              el.style.color = '#86868B';
+            }
+          } else {
+            el.style.display = 'none';
+          }
+        }
+      } catch(e) { /* silently fail */ }
+    }
+    
+    async function incrementDailyCount() {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+      try {
+        await fetch(DAILY_API + '/api/usage/increment', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+        checkDailyLimit();
+      } catch(e) { /* silently fail */ }
+    }
     
     const geocodeProviders = {
       nominatim: {
@@ -1745,6 +1787,13 @@
     async function processImages() {
       if (selectedFiles.length === 0) return;
       
+      // Check daily limit
+      if (!isSubscriber && DAILY_REMAINING !== null && selectedFiles.length > DAILY_REMAINING) {
+        showToast('Daily limit reached: you can process ' + DAILY_REMAINING + ' more image' + (DAILY_REMAINING > 1 ? 's' : '') + ' today. Upgrade to Pro for unlimited processing.');
+        showLoading(false);
+        return;
+      }
+      
       showLoading(true);
       updateProgress(0);
       processedImages = [];
@@ -1847,6 +1896,7 @@
       showLoading(false);
       displayResults();
       showToast('Processing complete!');
+      incrementDailyCount();
     }
 
     function displayResults() {
@@ -2548,6 +2598,8 @@
           }
           // Update dropdown
           if (acctEmail) acctEmail.textContent = user.email || '';
+          // Check daily limit
+          checkDailyLimit();
         } catch (e) {}
       } else {
         label.textContent = 'Sign in'; label.title = '';
