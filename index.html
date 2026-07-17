@@ -673,26 +673,44 @@
     
     
 
-    @media (max-width: 1200px) { 
-      .main-content { grid-template-columns: 1fr 1fr; grid-template-rows: auto; padding: 20px; gap: 18px; } 
-      .grid-item.results { grid-column: 1 / 3; grid-row: auto; min-height: auto; }
-      .grid-item.merged-module, .grid-item.upload, .grid-item.pricing, .grid-item.desktop { grid-row: auto; }
+    @media (max-width: 1024px) { 
+      .main-content { 
+        grid-template-columns: 1fr 1fr; 
+        grid-template-rows: auto; 
+        padding: 24px;
+        gap: 20px;
+      } 
+      .grid-item.results { 
+        grid-column: 1 / 3; 
+        grid-row: auto; 
+      }
+      .grid-item.merged-module { grid-row: 1; }
+      .grid-item.upload { grid-row: 2; }
+      .grid-item.pricing { grid-row: 3; }
+      .grid-item.desktop { grid-row: 4; }
     }
-    @media (max-width: 900px) { 
-      .main-content { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
-      .grid-item.merged-module, .grid-item.upload, .grid-item.results, .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
-      .grid-item { padding: 18px; border-radius: 12px; }
-      .steps { grid-template-columns: repeat(3, 1fr); gap: 12px; }
-      .step-number { width: 28px; height: 28px; font-size: 13px; }
-      .step-title { font-size: 14px; } .step-desc { font-size: 12px; }
-    }
+    
     @media (max-width: 768px) { 
-      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; padding: 16px; gap: 14px; }
-      header { padding: 12px 16px; }
-      .logo span { font-size: 16px; } .logo img { width: 32px; height: 32px; }
+      .main-content { 
+        grid-template-columns: 1fr; 
+        grid-template-rows: auto; 
+        padding: 20px;
+        gap: 16px;
+      }
+      header {
+        padding: 12px 20px;
+      }
+      .logo span {
+        font-size: 18px;
+      }
       .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
-      .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
-      .grid-item { padding: 16px; }
+      .grid-item.desktop, .grid-item.pricing { 
+        grid-column: 1; 
+        grid-row: auto; 
+      }
+      .grid-item {
+        padding: 20px;
+      }
       .panel-title {
         font-size: 16px;
       }
@@ -998,8 +1016,8 @@
         <p style="font-size:14px;color:#6E6E73;margin:0;">GPS data rendered directly onto your photo as a clean location badge — not a sidebar of numbers you have to copy-paste somewhere else.</p>
       </div>
       <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:280px;">
-        <strong style="font-size:16px;display:block;margin-bottom:8px;">Free Daily Quota</strong>
-        <p style="font-size:14px;color:#6E6E73;margin:0;">Free users get 3 images/day on web. Unlimited for desktop app users. Pro plan removes all limits — no daily caps, no batch quotas.</p>
+        <strong style="font-size:16px;display:block;margin-bottom:8px;">No Artificial Limits</strong>
+        <p style="font-size:14px;color:#6E6E73;margin:0;">Pro plan handles real-world volumes — construction projects, drone surveys, and photo archives with thousands of images. No daily caps, no batch quotas.</p>
       </div>
       <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:24px;flex:1;min-width:240px;max-width:280px;">
         <strong style="font-size:16px;display:block;margin-bottom:8px;">Persistent Sequential Naming</strong>
@@ -1055,7 +1073,6 @@
           </div>
           <h3 id="upload-title">Drop images here</h3>
           <p id="upload-desc">or click to browse</p>
-          <div id="daily-limit" style="font-size:12px;color:#86868B;margin-top:8px;display:none;"></div>
         </div>
         <div id="preview-container" class="preview-grid" style="display: none;"></div>
         <div id="empty-preview"><p id="empty-preview-text">No images selected</p></div>
@@ -1100,10 +1117,10 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Windows (.exe)
             </a>
-            <span class="download-link" style="font-size: 14px; padding: 10px 16px; opacity: 0.5; cursor: default;">
+            <a href="https://github.com/Ai01-8389/geostamp-app/releases/download/v1.0.4/geostamp-a1_1.0.4_aarch64.dmg" class="download-link" style="font-size: 14px; padding: 10px 16px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              macOS — Coming Soon
-            </span>
+              macOS (.dmg)
+            </a>
           </div>
           <div class="build-info">
             <div>✅ Unlimited processing · up to 100 images/batch</div>
@@ -1295,49 +1312,8 @@
 
     let isSubscriber = false;
     let MAX_FREE_IMAGES = 1;
-    let DAILY_REMAINING = null;
     let persistentFileCounter = 1;
     const geocodeCache = new Map();
-    const DAILY_API = 'https://api.geostamp.top';
-    
-    async function checkDailyLimit() {
-      const token = localStorage.getItem('access_token');
-      if (!token) { document.getElementById('daily-limit').style.display = 'none'; return; }
-      try {
-        const res = await fetch(DAILY_API + '/api/usage/check', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (data.success) {
-          DAILY_REMAINING = data.remaining;
-          const el = document.getElementById('daily-limit');
-          if (!data.isPro) {
-            el.textContent = 'Today: ' + data.usedToday + '/' + data.dailyLimit + ' images processed';
-            el.style.display = 'block';
-            if (data.remaining <= 0) {
-              el.style.color = '#FF3B30';
-              el.textContent += ' (limit reached — sign in with Pro)';
-            } else {
-              el.style.color = '#86868B';
-            }
-          } else {
-            el.style.display = 'none';
-          }
-        }
-      } catch(e) { /* silently fail */ }
-    }
-    
-    async function incrementDailyCount() {
-      const token = localStorage.getItem('access_token');
-      if (!token) return;
-      try {
-        await fetch(DAILY_API + '/api/usage/increment', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-        });
-        checkDailyLimit();
-      } catch(e) { /* silently fail */ }
-    }
     
     const geocodeProviders = {
       nominatim: {
@@ -1519,12 +1495,12 @@
       processImages();
     }
 
-    async function extractExif(file) {
+        async function extractExif(file) {
       try {
         debugLog(`Reading EXIF: ${file.name} (${(file.size/1024).toFixed(1)}KB)`);
         const tags = await exifr.parse(file, ['GPSLatitude', 'GPSLongitude', 'DateTimeOriginal']);
         const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
-        if (!tags) { debugLog('No EXIF found'); return result; }
+        if (!tags) { debugLog('No EXIF'); return result; }
         result.hasExif = true;
         result.timestamp = tags.DateTimeOriginal ? tags.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') : null;
         if (tags.GPSLatitude !== undefined && tags.GPSLongitude !== undefined) {
@@ -1540,172 +1516,6 @@
         debugLog(`EXIF error: ${e.message}`);
         return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
       }
-    }
-
-    async function readString_(dataView, offset, length) {
-      let str = '';
-      for (let i = 0; i < length; i++) {
-        const char = dataView.getUint8(offset + i);
-        if (char === 0) break;
-        str += String.fromCharCode(char);
-      }
-      return str;
-    }
-
-    // --- REMOVED OLD EXIF BODY ---
-    async function _dead(lat, lng) {
-        
-        let offset = 2;
-        while (offset < buffer.byteLength - 2) {
-          const marker = dataView.getUint16(offset);
-          
-          if (marker === 0xFFE1) {
-            const length = dataView.getUint16(offset + 2);
-            const exifOffset = offset + 4;
-            if (dataView.getUint32(exifOffset) === 0x45786966) {
-              debugLog('Found EXIF header');
-              const tiffOffset = exifOffset + 6;
-              const byteOrder = dataView.getUint16(tiffOffset);
-              const isLittleEndian = byteOrder === 0x4949;
-              
-              const tiffMarker = dataView.getUint16(tiffOffset + 2, isLittleEndian);
-              
-              if (tiffMarker === 0x002A) {
-                const firstIfdOffset = dataView.getUint32(tiffOffset + 4, isLittleEndian) + tiffOffset;
-                const exifData = parseTiffIfd(dataView, tiffOffset, firstIfdOffset, isLittleEndian);
-                if (exifData) {
-                  result.hasExif = true;
-                  result.timestamp = exifData.timestamp;
-                  if (exifData.gpsLatitude !== undefined && exifData.gpsLongitude !== undefined) {
-                    const lat = exifData.gpsLatitude;
-                    const lng = exifData.gpsLongitude;
-                    debugLog(`GPS Coords found: ${lat}, ${lng}`);
-                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                      result.gps = { lat, lng };
-                      result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                    }
-                  }
-                }
-              }
-              break;
-            }
-          }
-          offset += dataView.getUint16(offset + 2) + 2;
-        }
-        return result;
-      } catch (e) {
-        debugLog(`EXIF error: ${e.message}`);
-        return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
-      }
-    }
-
-    function parseTiffIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-      
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-        
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-        
-        if (tag === 0x0132) result.timestamp = readString(dataView, valueOffset, count);
-        else if (tag === 0x8769) {
-          const exifIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseTiffIfd(dataView, tiffOffset, exifIfdOffset, isLittleEndian));
-        } else if (tag === 0x8825) {
-          const gpsIfdOffset = dataView.getUint32(valueOffset, isLittleEndian) + tiffOffset;
-          Object.assign(result, parseGpsIfd(dataView, tiffOffset, gpsIfdOffset, isLittleEndian));
-        }
-        entryOffset += 12;
-      }
-      
-      const nextIfd = dataView.getUint32(entryOffset, isLittleEndian);
-      if (nextIfd !== 0) Object.assign(result, parseTiffIfd(dataView, tiffOffset, nextIfd + tiffOffset, isLittleEndian));
-      
-      return result;
-    }
-
-    function parseGpsIfd(dataView, tiffOffset, ifdOffset, isLittleEndian) {
-      const result = {};
-      const entries = dataView.getUint16(ifdOffset, isLittleEndian);
-      let entryOffset = ifdOffset + 2;
-      
-      let latRef, lonRef, latDegNum, latDegDen, latMinNum, latMinDen, latSecNum, latSecDen;
-      let lonDegNum, lonDegDen, lonMinNum, lonMinDen, lonSecNum, lonSecDen;
-      
-      for (let i = 0; i < entries; i++) {
-        const tag = dataView.getUint16(entryOffset, isLittleEndian);
-        const format = dataView.getUint16(entryOffset + 2, isLittleEndian);
-        const count = dataView.getUint32(entryOffset + 4, isLittleEndian);
-        let valueOffset = dataView.getUint32(entryOffset + 8, isLittleEndian);
-        
-        if (count * getFormatSize(format) <= 4) valueOffset = entryOffset + 8;
-        else valueOffset += tiffOffset;
-        
-        switch (tag) {
-          case 0x0001: latRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0002: 
-            if (format === 5 && count === 3) {
-              latDegNum = dataView.getUint32(valueOffset, isLittleEndian);
-              latDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-              latMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian);
-              latMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-              latSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian);
-              latSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-            } break;
-          case 0x0003: lonRef = String.fromCharCode(dataView.getUint8(valueOffset)); break;
-          case 0x0004: 
-            if (format === 5 && count === 3) {
-              lonDegNum = dataView.getUint32(valueOffset, isLittleEndian);
-              lonDegDen = dataView.getUint32(valueOffset + 4, isLittleEndian);
-              lonMinNum = dataView.getUint32(valueOffset + 8, isLittleEndian);
-              lonMinDen = dataView.getUint32(valueOffset + 12, isLittleEndian);
-              lonSecNum = dataView.getUint32(valueOffset + 16, isLittleEndian);
-              lonSecDen = dataView.getUint32(valueOffset + 20, isLittleEndian);
-            } break;
-        }
-        entryOffset += 12;
-      }
-      
-      if (latDegNum !== undefined) {
-        const latDeg = latDegNum / latDegDen;
-        const latMin = latMinNum / latMinDen;
-        const latSec = latSecNum / latSecDen;
-        let lat = latDeg + latMin/60 + latSec/3600;
-        if (latRef === 'S') lat = -lat;
-        result.gpsLatitude = lat;
-      }
-      
-      if (lonDegNum !== undefined) {
-        const lonDeg = lonDegNum / lonDegDen;
-        const lonMin = lonMinNum / lonMinDen;
-        const lonSec = lonSecNum / lonSecDen;
-        let lon = lonDeg + lonMin/60 + lonSec/3600;
-        if (lonRef === 'W') lon = -lon;
-        result.gpsLongitude = lon;
-      }
-      
-      return result;
-    }
-
-    function getFormatSize(format) {
-      const sizes = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8, 4, 8];
-      return sizes[format] || 0;
-    }
-
-    function readString(dataView, offset, length) {
-      let str = '';
-      for (let i = 0; i < length; i++) {
-        const char = dataView.getUint8(offset + i);
-        if (char === 0) break;
-        str += String.fromCharCode(char);
-      }
-      return str;
     }
 
     async function reverseGeocode(lat, lng) {
@@ -1793,13 +1603,6 @@
 
     async function processImages() {
       if (selectedFiles.length === 0) return;
-      
-      // Check daily limit
-      if (!isSubscriber && DAILY_REMAINING !== null && selectedFiles.length > DAILY_REMAINING) {
-        showToast('Daily limit reached: you can process ' + DAILY_REMAINING + ' more image' + (DAILY_REMAINING > 1 ? 's' : '') + ' today. Upgrade to Pro for unlimited processing.');
-        showLoading(false);
-        return;
-      }
       
       showLoading(true);
       updateProgress(0);
@@ -1903,7 +1706,6 @@
       showLoading(false);
       displayResults();
       showToast('Processing complete!');
-      incrementDailyCount();
     }
 
     function displayResults() {
@@ -2605,8 +2407,6 @@
           }
           // Update dropdown
           if (acctEmail) acctEmail.textContent = user.email || '';
-          // Check daily limit
-          checkDailyLimit();
         } catch (e) {}
       } else {
         label.textContent = 'Sign in'; label.title = '';
