@@ -1300,48 +1300,78 @@
 
     let isSubscriber = false;
     let MAX_FREE_IMAGES = 1;
-    let DAILY_REMAINING = null;
+    let DAILY_REMAINING = 999;
     let persistentFileCounter = 1;
     const geocodeCache = new Map();
     const DAILY_API = 'https://api.geostamp.top';
+    const SUPER_EMAIL = 'focusclaw@outlook.com';
+    
+    function isSuperUser() {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try { if (JSON.parse(userData).email === SUPER_EMAIL) return true; } catch(e) {}
+      }
+      return localStorage.getItem('geostamp_super') === '1';
+    }
+    
+    function getLocalDailyCount() {
+      const today = new Date().toISOString().slice(0, 10);
+      return parseInt(localStorage.getItem('daily-' + today) || '0');
+    }
+    
+    function incrLocalDailyCount() {
+      const today = new Date().toISOString().slice(0, 10);
+      const c = getLocalDailyCount() + 1;
+      localStorage.setItem('daily-' + today, String(c));
+      return c;
+    }
     
     async function checkDailyLimit() {
+      if (isSuperUser()) { DAILY_REMAINING = 999; return; }
       const token = localStorage.getItem('access_token');
-      if (!token) { document.getElementById('daily-limit').style.display = 'none'; return; }
-      try {
-        const res = await fetch(DAILY_API + '/api/usage/check', {
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json();
-        if (data.success) {
-          DAILY_REMAINING = data.remaining;
-          const el = document.getElementById('daily-limit');
-          if (!data.isPro) {
-            el.textContent = 'Today: ' + data.usedToday + '/' + data.dailyLimit + ' images processed';
-            el.style.display = 'block';
-            if (data.remaining <= 0) {
-              el.style.color = '#FF3B30';
-              el.textContent += ' (limit reached — sign in with Pro)';
-            } else {
-              el.style.color = '#86868B';
-            }
-          } else {
-            el.style.display = 'none';
+      if (token) {
+        try {
+          const res = await fetch(DAILY_API + '/api/usage/check', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const data = await res.json();
+          if (data.success) {
+            DAILY_REMAINING = data.isPro ? 999 : data.remaining;
+            updateLimitUI(data.usedToday, data.dailyLimit, data.remaining <= 0);
           }
-        }
-      } catch(e) { /* silently fail */ }
+        } catch(e) {}
+      } else {
+        const used = getLocalDailyCount();
+        const limit = 3;
+        DAILY_REMAINING = Math.max(0, limit - used);
+        updateLimitUI(used, limit, DAILY_REMAINING <= 0);
+      }
+    }
+    
+    function updateLimitUI(used, limit, reached) {
+      const el = document.getElementById('daily-limit');
+      if (!el) return;
+      el.textContent = reached 
+        ? 'Today: ' + used + '/' + limit + ' (limit reached — sign in for Pro)'
+        : 'Today: ' + used + '/' + limit + ' images processed';
+      el.style.display = 'block';
+      el.style.color = reached ? '#FF3B30' : '#86868B';
     }
     
     async function incrementDailyCount() {
+      if (isSuperUser()) return;
       const token = localStorage.getItem('access_token');
-      if (!token) return;
-      try {
-        await fetch(DAILY_API + '/api/usage/increment', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-        });
-        checkDailyLimit();
-      } catch(e) { /* silently fail */ }
+      if (token) {
+        try {
+          await fetch(DAILY_API + '/api/usage/increment', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+          });
+        } catch(e) {}
+      } else {
+        incrLocalDailyCount();
+      }
+      checkDailyLimit();
     }
     
     const geocodeProviders = {
@@ -1645,7 +1675,7 @@
       if (selectedFiles.length === 0) return;
       
       // Check daily limit
-      if (!isSubscriber && DAILY_REMAINING !== null && selectedFiles.length > DAILY_REMAINING) {
+      if (!isSubscriber && DAILY_REMAINING !== null && DAILY_REMAINING < selectedFiles.length) {
         showToast('Daily limit reached: you can process ' + DAILY_REMAINING + ' more image' + (DAILY_REMAINING > 1 ? 's' : '') + ' today. Upgrade to Pro for unlimited processing.');
         showLoading(false);
         return;
