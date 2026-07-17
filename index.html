@@ -1532,7 +1532,17 @@
         if (!tags) { debugLog('No EXIF'); return result; }
         result.hasExif = true;
         result.timestamp = tags.DateTimeOriginal || tags.CreateDate || null;
-        if (result.timestamp) result.timestamp = result.timestamp.toString().replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+        if (result.timestamp) {
+          if (typeof result.timestamp === 'string') {
+            result.timestamp = result.timestamp.replace(/(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3').substring(0, 19);
+          } else {
+            const d = new Date(result.timestamp);
+            if (!isNaN(d.getTime())) {
+              const p = n => String(n).padStart(2, '0');
+              result.timestamp = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+            }
+          }
+        }
         const lat = tags.latitude, lng = tags.longitude;
         if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
           debugLog(`GPS: ${lat}, ${lng}`);
