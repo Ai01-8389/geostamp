@@ -674,69 +674,27 @@
     
 
     @media (max-width: 1200px) { 
-      .main-content { 
-        grid-template-columns: 1fr 1fr; 
-        grid-template-rows: auto; 
-        padding: 20px;
-        gap: 18px;
-      } 
-      .grid-item.results { 
-        grid-column: 1 / 3; 
-        grid-row: auto; 
-        min-height: auto;
-      }
-      .grid-item.merged-module, .grid-item.upload, 
-      .grid-item.pricing, .grid-item.desktop { 
-        grid-row: auto; 
-      }
+      .main-content { grid-template-columns: 1fr 1fr; grid-template-rows: auto; padding: 20px; gap: 18px; } 
+      .grid-item.results { grid-column: 1 / 3; grid-row: auto; min-height: auto; }
+      .grid-item.merged-module, .grid-item.upload, .grid-item.pricing, .grid-item.desktop { grid-row: auto; }
     }
-    
-    /* iPad portrait */
     @media (max-width: 900px) { 
-      .main-content { 
-        grid-template-columns: 1fr; 
-        grid-template-rows: auto; 
-        padding: 16px;
-        gap: 14px;
-      }
-      .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
-      .grid-item.desktop, .grid-item.pricing { 
-        grid-column: 1; grid-row: auto; 
-      }
+      .main-content { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
+      .grid-item.merged-module, .grid-item.upload, .grid-item.results, .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
       .grid-item { padding: 18px; border-radius: 12px; }
       .steps { grid-template-columns: repeat(3, 1fr); gap: 12px; }
       .step-number { width: 28px; height: 28px; font-size: 13px; }
-      .step-title { font-size: 14px; }
-      .step-desc { font-size: 12px; }
+      .step-title { font-size: 14px; } .step-desc { font-size: 12px; }
     }
-    
     @media (max-width: 768px) { 
-      .main-content { 
-        grid-template-columns: 1fr; 
-        grid-template-rows: auto; 
-        padding: 16px;
-        gap: 14px;
-      }
-      header {
-        padding: 12px 16px;
-      }
-      .logo span { font-size: 16px; }
-      .logo img { width: 32px; height: 32px; }
+      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; padding: 16px; gap: 14px; }
+      header { padding: 12px 16px; }
+      .logo span { font-size: 16px; } .logo img { width: 32px; height: 32px; }
       .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
-      .grid-item.desktop, .grid-item.pricing { 
-        grid-column: 1; 
-        grid-row: auto; 
-      }
+      .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
       .grid-item { padding: 16px; }
-      .panel-title { font-size: 16px; }
-      .comparison-grid { flex-direction: column; }
-      .comparison-item img { max-height: 200px; }
-      .steps { grid-template-columns: 1fr; gap: 12px; }
-      .pricing-table { flex-direction: column; }
-      .pricing-card { margin: 8px 0; }
-      button, .btn, .download-link { width: 100%; text-align: center; }
-      .nav-links { gap: 8px; }
-      .nav-links a { font-size: 13px; margin-right: 4px; }
+      .panel-title {
+        font-size: 16px;
       }
     }
     
@@ -991,7 +949,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
 </head>
 <body>
   <div id="app">
@@ -1090,7 +1048,7 @@
 
       <div class="grid-item upload">
         <h2 class="panel-title" id="panel-upload">Upload Images</h2>
-        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*" multiple>
+        <input type="file" id="file-input" accept="image/*" multiple>
         <div class="upload-area" id="upload-area">
           <div class="upload-icon">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
@@ -1563,15 +1521,39 @@
 
     async function extractExif(file) {
       try {
-        debugLog(`Processing file: ${file.name} (${file.size} bytes)`);
-        const buffer = await file.arrayBuffer();
+        debugLog(`Reading EXIF: ${file.name} (${(file.size/1024).toFixed(1)}KB)`);
+        const tags = await exifr.parse(file, ['GPSLatitude', 'GPSLongitude', 'DateTimeOriginal']);
         const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
-        const dataView = new DataView(buffer);
-        
-        if (dataView.getUint16(0) !== 0xFFD8) {
-          debugLog('Not a JPEG file');
-          return result;
+        if (!tags) { debugLog('No EXIF found'); return result; }
+        result.hasExif = true;
+        result.timestamp = tags.DateTimeOriginal ? tags.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') : null;
+        if (tags.GPSLatitude !== undefined && tags.GPSLongitude !== undefined) {
+          const lat = tags.GPSLatitude, lng = tags.GPSLongitude;
+          debugLog(`GPS: ${lat}, ${lng}`);
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            result.gps = { lat, lng };
+            result.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          }
         }
+        return result;
+      } catch (e) {
+        debugLog(`EXIF error: ${e.message}`);
+        return { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
+      }
+    }
+
+    async function readString_(dataView, offset, length) {
+      let str = '';
+      for (let i = 0; i < length; i++) {
+        const char = dataView.getUint8(offset + i);
+        if (char === 0) break;
+        str += String.fromCharCode(char);
+      }
+      return str;
+    }
+
+    // --- REMOVED OLD EXIF BODY ---
+    async function _dead(lat, lng) {
         
         let offset = 2;
         while (offset < buffer.byteLength - 2) {
@@ -1809,25 +1791,6 @@
       }
     }
 
-    // Convert HEIC/HEIF to JPEG
-    async function convertHeicIfNeeded(file) {
-      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || 
-                     file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
-      if (!isHeic) return file;
-      try {
-        debugLog('Converting HEIC to JPEG...');
-        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-        const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
-        const jpegFile = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-        debugLog('HEIC conversion done');
-        return jpegFile;
-      } catch (e) {
-        debugLog('HEIC conversion failed: ' + e.message);
-        showToast('HEIC photo not supported on this browser. Try JPEG or PNG.');
-        return null;
-      }
-    }
-
     async function processImages() {
       if (selectedFiles.length === 0) return;
       
@@ -1848,15 +1811,11 @@
       
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
-        // Convert HEIC to JPEG if needed
-        const processFile = await convertHeicIfNeeded(file);
-        if (!processFile) continue;
-        
         persistentFileCounter++;
-        debugLog(`Processing ${i + 1}/${selectedFiles.length}: ${processFile.name} (Counter: ${persistentFileCounter})`);
+        debugLog(`Processing ${i + 1}/${selectedFiles.length}: ${file.name} (Counter: ${persistentFileCounter})`);
         debugLog(`processedImages length before push: ${processedImages.length}`);
         
-        const exifData = await extractExif(processFile);
+        const exifData = await extractExif(file);
         debugLog(`EXIF result: ${JSON.stringify(exifData)}`);
         
         if (exifData.gps) {
@@ -1877,7 +1836,7 @@
         await new Promise((resolve, reject) => {
           img.onload = resolve;
           img.onerror = reject;
-          img.src = URL.createObjectURL(processFile);
+          img.src = URL.createObjectURL(file);
         });
         
         canvas.width = img.width;
