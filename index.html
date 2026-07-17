@@ -1527,13 +1527,14 @@
     async function extractExif(file) {
       try {
         debugLog(`Reading EXIF: ${file.name} (${(file.size/1024).toFixed(1)}KB)`);
-        const tags = await exifr.parse(file, ['GPSLatitude', 'GPSLongitude', 'DateTimeOriginal']);
+        const tags = await exifr.parse(file, { gps: true, exif: true });
         const result = { hasExif: false, gps: null, location: null, placeName: null, timestamp: null };
         if (!tags) { debugLog('No EXIF'); return result; }
         result.hasExif = true;
-        result.timestamp = tags.DateTimeOriginal ? tags.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') : null;
-        if (tags.GPSLatitude !== undefined && tags.GPSLongitude !== undefined) {
-          const lat = tags.GPSLatitude, lng = tags.GPSLongitude;
+        result.timestamp = tags.DateTimeOriginal || tags.CreateDate || null;
+        if (result.timestamp) result.timestamp = result.timestamp.toString().replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+        const lat = tags.latitude, lng = tags.longitude;
+        if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
           debugLog(`GPS: ${lat}, ${lng}`);
           if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
             result.gps = { lat, lng };
@@ -1547,7 +1548,7 @@
       }
     }
 
-        async function reverseGeocode(lat, lng) {
+    async function reverseGeocode(lat, lng) {
       if (customLocationText.trim()) {
         debugLog(`Using custom location: ${customLocationText}`);
         return customLocationText.trim();
