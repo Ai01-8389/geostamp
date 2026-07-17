@@ -680,12 +680,14 @@
     }
     @media (max-width: 900px) { 
       .main-content { grid-template-columns: 1fr; padding: 16px; gap: 14px; overflow: visible; }
-      .grid-item { padding: 18px; border-radius: 12px; min-height: auto; }
+      .grid-item { padding: 18px; border-radius: 12px; overflow: visible; min-height: auto; }
       .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
       .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
+      .comparison-item img { max-height: 220px; object-fit: contain; }
       .steps { grid-template-columns: repeat(3, 1fr); gap: 12px; }
       .step-number { width: 28px; height: 28px; font-size: 13px; }
       .step-title { font-size: 14px; } .step-desc { font-size: 12px; }
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 768px) { 
       .main-content { grid-template-columns: 1fr; grid-template-rows: auto; padding: 16px; gap: 14px; overflow: visible; }
@@ -693,8 +695,12 @@
       .logo span { font-size: 16px; } .logo img { width: 32px; height: 32px; }
       .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
       .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
-      .grid-item { padding: 16px; }
+      .grid-item { padding: 16px; overflow: visible; }
       .panel-title { font-size: 16px; }
+      .comparison-item img { max-height: 180px; object-fit: contain; }
+      .results-grid { grid-template-columns: 1fr 1fr; }
+      .step-title { font-size: 13px; } .step-desc { font-size: 11px; }
+      .download-link { width: 100%; text-align: center; }
     }
     
     .footer { 
