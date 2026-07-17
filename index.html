@@ -674,19 +674,21 @@
     
 
     @media (max-width: 1200px) { 
-      .main-content { grid-template-columns: 1fr 1fr; grid-template-rows: auto; padding: 20px; gap: 18px; } 
+      .main-content { grid-template-columns: 1fr 1fr; grid-template-rows: auto; padding: 20px; gap: 18px; overflow: visible; } 
       .grid-item.results { grid-column: 1 / 3; grid-row: auto; min-height: auto; }
       .grid-item.merged-module, .grid-item.upload, .grid-item.pricing, .grid-item.desktop { grid-row: auto; }
     }
     @media (max-width: 900px) { 
-      .main-content { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
-      .grid-item { padding: 18px; border-radius: 12px; }
+      .main-content { grid-template-columns: 1fr; padding: 16px; gap: 14px; overflow: visible; }
+      .grid-item { padding: 18px; border-radius: 12px; min-height: auto; }
+      .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
+      .grid-item.desktop, .grid-item.pricing { grid-column: 1; grid-row: auto; }
       .steps { grid-template-columns: repeat(3, 1fr); gap: 12px; }
       .step-number { width: 28px; height: 28px; font-size: 13px; }
       .step-title { font-size: 14px; } .step-desc { font-size: 12px; }
     }
     @media (max-width: 768px) { 
-      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; padding: 16px; gap: 14px; }
+      .main-content { grid-template-columns: 1fr; grid-template-rows: auto; padding: 16px; gap: 14px; overflow: visible; }
       header { padding: 12px 16px; }
       .logo span { font-size: 16px; } .logo img { width: 32px; height: 32px; }
       .grid-item.merged-module, .grid-item.upload, .grid-item.results, 
