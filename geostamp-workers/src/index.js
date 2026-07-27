@@ -149,14 +149,41 @@ async function checkRateLimit(env, key, limit, windowSeconds) {
 async function handleRequestCode(request, env, corsHeaders) {
   const body = await request.json();
   const email = body.email?.toLowerCase().trim();
-  
+  const turnstileToken = body.turnstile_token;
+
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return new Response(JSON.stringify({
       success: false,
       error: { code: 'INVALID_EMAIL', message: 'Please enter a valid email address' }
     }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-  
+
+  // Verify Turnstile token
+  if (!turnstileToken) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: { code: 'TURNSTILE_REQUIRED', message: 'Security check required' }
+    }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const turnstileResp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: env.TURNSTILE_SECRET_KEY,
+      response: turnstileToken
+    })
+  });
+  const turnstileData = await turnstileResp.json();
+
+  if (!turnstileData.success) {
+    console.error('Turnstile verification failed:', turnstileData);
+    return new Response(JSON.stringify({
+      success: false,
+      error: { code: 'TURNSTILE_FAILED', message: 'Security check failed. Please try again.' }
+    }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   // Rate limit check
   const rateCheck = await checkRateLimit(env, `rate:${email}`, 10, 60);
   if (!rateCheck.allowed) {
