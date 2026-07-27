@@ -28,6 +28,7 @@
   <meta name="twitter:description" content="Add GPS location stamps to your photos. Private, free, no uploads. Windows & macOS desktop app available.">
 
   <!-- Schema.org 结构化数据 -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -911,6 +912,7 @@
       box-shadow: 0 0 0 3px rgba(0,122,255,.15);
     }
     .auth-dialog input[type=email]::placeholder { color: #999; }
+    .auth-dialog .cf-turnstile { margin: 12px 0; display: flex; justify-content: center; }
     .code-boxes { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
     .code-digit {
       width: 46px; height: 56px;
@@ -2298,6 +2300,8 @@
       document.getElementById('auth-error-email').textContent = '';
       document.getElementById('auth-error-code').textContent = '';
       document.querySelectorAll('.code-digit').forEach(el => el.value = '');
+      // Reset Turnstile widget
+      if (typeof turnstile !== 'undefined') turnstile.reset();
       setTimeout(() => document.getElementById('auth-email')?.focus(), 100);
     }
     
@@ -2319,12 +2323,18 @@
           errorEl.textContent = 'Please enter a valid email address';
           return;
         }
+        // Verify Turnstile
+        const turnstileToken = turnstile?.getResponse();
+        if (!turnstileToken) {
+          errorEl.textContent = 'Please complete the security check';
+          return;
+        }
         const btn = document.getElementById('auth-send-code');
         btn.disabled = true; btn.textContent = 'Sending...'; errorEl.textContent = '';
         try {
           const res = await fetch(API_BASE + '/api/auth/request-code', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, turnstile_token: turnstileToken })
           });
           const data = await res.json();
           if (data.success) {
@@ -2400,26 +2410,12 @@
         finally { btn.disabled = false; btn.textContent = 'Verify'; }
       });
       
-      // Resend code
+      // Resend code — go back to email step for Turnstile re-verification
       document.getElementById('auth-resend-link')?.addEventListener('click', async () => {
-        const email = document.getElementById('auth-email-display').textContent;
-        const errorEl = document.getElementById('auth-error-code');
-        const link = document.getElementById('auth-resend-link');
-        link.style.pointerEvents = 'none'; link.style.opacity = '0.5'; errorEl.textContent = '';
-        try {
-          const res = await fetch(API_BASE + '/api/auth/request-code', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
-          });
-          const data = await res.json();
-          if (data.success) {
-            let count = 60; const cd = document.getElementById('auth-countdown'); cd.textContent = count;
-            const timer = setInterval(() => { count--; cd.textContent = count;
-              if (count <= 0) { clearInterval(timer); link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-            }, 1000);
-            document.querySelectorAll('.code-digit').forEach(el => el.value = '');
-            document.querySelector('.code-digit')?.focus();
-          } else { errorEl.textContent = data.error?.message || 'Failed to resend'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
-        } catch (err) { errorEl.textContent = 'Network error.'; link.style.pointerEvents = 'auto'; link.style.opacity = '1'; }
+        document.getElementById('auth-step-code').classList.add('hidden');
+        document.getElementById('auth-step-email').classList.remove('hidden');
+        if (typeof turnstile !== 'undefined') turnstile.reset();
+        document.getElementById('auth-error-code').textContent = '';
       });
     }
     
@@ -2634,7 +2630,8 @@
       <div class="auth-step" id="auth-step-email">
         <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
         <p class="auth-error" id="auth-error-email"></p>
-        <button class="auth-btn" id="auth-send-code" style="margin-top:12px">Send Verification Code</button>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAD_Ei9aHAhaatnEJ" data-theme="light"></div>
+        <button class="auth-btn" id="auth-send-code" style="margin-top:0">Send Verification Code</button>
       </div>
       
       <div class="auth-step hidden" id="auth-step-code">
